@@ -1,0 +1,13 @@
+[project]
+name = "recoder"
+version = "1.0.0"
+description = "A GTK4 video transcoding GUI application"
+authors = [{name = "Jeena", email = "hello@jeena.net"}]
+license = "GPL-3.0-or-later"
+
+[project.scripts]
+recoder = "recoder.app:main"  # This creates the /usr/bin/recoder entrypoint
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

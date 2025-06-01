@@ -18,17 +18,25 @@ optdepends=(
   'libcanberra: play system notification sounds'
   'sound-theme-freedesktop: standard system sounds like "complete.oga"'
 )
-makedepends=('python-setuptools')
+makedepends=(
+    'python-setuptools'
+    'python-build'
+    'python-installer'
+)
 source=()
 sha256sums=()
 
+build() {
+    cd "$srcdir"
+    python -m build --wheel
+}
+
 package() {
-    install -Dm755 "../src/app.py" "$pkgdir/usr/bin/recoder"
-    install -Dm644 "../src/config.py" "$pkgdir/usr/lib/recoder/config.py"
-    install -Dm644 "../src/models.py" "$pkgdir/usr/lib/recoder/models.py"
-    install -Dm644 "../src/transcoder_worker.py" "$pkgdir/usr/lib/recoder/transcoder_worker.py"
-    install -Dm644 "../src/ui.py" "$pkgdir/usr/lib/recoder/ui.py"
-    install -Dm644 "../resources/net.jeena.Recoder.desktop" "$pkgdir/usr/share/applications/net.jeena.Recoder.desktop"
-    install -Dm644 "../resources/net.jeena.Recoder.png" "$pkgdir/usr/share/icons/hicolor/256x256/apps/net.jeena.Recoder.png"
-    install -Dm644 "../src/__init__.py" "$pkgdir/usr/lib/recoder/__init__.py"
+    cd "$srcdir"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+
+    install -Dm644 resources/net.jeena.Recoder.desktop \
+        "$pkgdir/usr/share/applications/net.jeena.Recoder.desktop"
+    install -Dm644 resources/net.jeena.Recoder.png \
+        "$pkgdir/usr/share/icons/hicolor/256x256/apps/net.jeena.Recoder.png"
 }

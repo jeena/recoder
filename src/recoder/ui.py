@@ -7,8 +7,8 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio, Gdk, GLib
 from functools import partial
 
-from config import load_config, save_config
-from transcoder_worker import TranscoderWorker
+from recoder.config import load_config, save_config
+from recoder.transcoder_worker import TranscoderWorker
 
 class RecoderWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
