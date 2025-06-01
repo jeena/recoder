@@ -16,7 +16,7 @@ depends=(
 )
 optdepends=(
   'libcanberra: play system notification sounds'
-  'sound-theme-freedesktop: standard system sounds like "complete.oga"'
+  'sound-theme-freedesktop: standard system sounds like \"complete.oga\"'
 )
 makedepends=(
     'python-setuptools'
@@ -27,12 +27,12 @@ source=()
 sha256sums=()
 
 build() {
-    cd "$srcdir"
-    python -m build --wheel
+    cd "$srcdir/../"  # go to your project root
+    python -m build --wheel --outdir dist
 }
 
 package() {
-    cd "$srcdir"
+    cd "$srcdir/../"  # back to project root where dist/ is
     python -m installer --destdir="$pkgdir" dist/*.whl
 
     install -Dm644 resources/net.jeena.Recoder.desktop \
