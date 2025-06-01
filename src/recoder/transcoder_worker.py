@@ -1,23 +1,12 @@
 import os
 import threading
-from gi.repository import GLib
 import subprocess
-
-def transcode_file(input_path, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
-    basename = os.path.basename(input_path)
-    output_path = os.path.join(output_dir, basename)
-
-    cmd = [
-        "ffmpeg", "-y", "-i", input_path,
-        "-c:v", "libx264", "-preset", "fast",
-        "-c:a", "aac", output_path
-    ]
-
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return result.returncode == 0, output_path
+import re
+from gi.repository import GLib
 
 class TranscoderWorker:
+    TIME_RE = re.compile(r"time=(\d+):(\d+):(\d+)\.(\d+)")
+
     def __init__(self, files, progress_callback=None, done_callback=None):
         self.files = files
         self.progress_callback = progress_callback
@@ -34,19 +23,67 @@ class TranscoderWorker:
 
     def _process_files(self):
         total = len(self.files)
-        for idx, filepath in enumerate(self.files):
+        for idx, filepath in enumerate(self.files, start=1):
             basename = os.path.basename(filepath)
-            self._update_progress(f"Processing {basename} ({idx}/{total})...", idx / total)
+            self._update_progress(f"Starting {basename}", (idx - 1) / total)
 
-            success, output_path = transcode_file(filepath, os.path.join(os.path.dirname(filepath), "transcoded"))
+            success, output_path = self._transcode_file(filepath, os.path.join(os.path.dirname(filepath), "transcoded"), basename, idx, total)
             if not success:
-                self._update_progress(f"Error transcoding {basename}", idx + 1 / total)
+                self._update_progress(f"Error transcoding {basename}", idx / total)
             else:
-                self._update_progress(f"Finished {basename}", idx + 1 / total)
+                self._update_progress(f"Finished {basename}", idx / total)
 
         self.is_processing = False
         self._update_progress("All done!", 1.0)
         self._notify_done()
+
+    def _transcode_file(self, input_path, output_dir, basename, idx, total):
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, basename)
+
+        # Get duration of input file
+        duration = self._get_duration(input_path)
+        if duration is None:
+            duration = 1.0  # fallback to avoid division by zero
+
+        cmd = [
+            "ffmpeg", "-y", "-i", input_path,
+            "-c:v", "libx264", "-preset", "fast",
+            "-c:a", "aac", output_path
+        ]
+
+        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, universal_newlines=True)
+
+        while True:
+            line = process.stderr.readline()
+            if not line:
+                break
+
+            match = self.TIME_RE.search(line)
+            if match:
+                hours, minutes, seconds, milliseconds = map(int, match.groups())
+                elapsed = hours * 3600 + minutes * 60 + seconds + milliseconds / 100
+                progress_fraction = min(elapsed / duration, 1.0)
+                overall_fraction = (idx - 1 + progress_fraction) / total
+                self._update_progress(f"Transcoding {basename}", overall_fraction)
+
+        process.wait()
+        success = (process.returncode == 0)
+        return success, output_path
+
+    def _get_duration(self, input_path):
+        # Run ffprobe to get duration in seconds
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            input_path
+        ]
+        try:
+            output = subprocess.check_output(cmd, universal_newlines=True)
+            return float(output.strip())
+        except Exception:
+            return None
 
     def _update_progress(self, text, fraction):
         if self.progress_callback:
