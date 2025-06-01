@@ -4,7 +4,8 @@ import shutil
 import subprocess
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, Gio, Gdk, GLib
+gi.require_version('Notify', '0.7')
+from gi.repository import Gtk, Adw, Gio, Gdk, GLib, Notify
 from functools import partial
 
 from recoder.config import load_config, save_config
@@ -62,6 +63,8 @@ class RecoderWindow(Adw.ApplicationWindow):
         self.progress = Gtk.ProgressBar()
         self.vbox.append(self.progress)
         self.progress.set_hexpand(True)
+
+        Notify.init("Recoder")
 
     def _setup_css(self):
         css = b"""
@@ -156,6 +159,12 @@ class RecoderWindow(Adw.ApplicationWindow):
         self.progress.set_show_text(True)
         self.progress.set_text("Transcoding Complete!")
         self.play_complete_sound()
+        notification = Notify.Notification.new(
+            "Recoder",
+            "Transcoding finished!",
+            "net.jeena.Recoder"
+        )
+        notification.show()
 
     def play_complete_sound(self):
         if shutil.which("canberra-gtk-play"):
