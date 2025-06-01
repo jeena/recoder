@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Recoder
-Exec=recoder
-Icon=video-x-generic
-Terminal=false
-Categories=AudioVideo;Video;GTK;
-StartupNotify=true
