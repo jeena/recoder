@@ -2,7 +2,7 @@
 Name=Recoder
 Comment=GTK4 Video Transcoding GUI Application
 Exec=recoder
-Icon=recoder
+Icon=net.jeena.Recoder
 Terminal=false
 Type=Application
 Categories=AudioVideo;Video;Utility;

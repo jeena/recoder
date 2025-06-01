@@ -11,7 +11,7 @@ Adw.init()
 
 class RecoderApp(Adw.Application):
     def __init__(self):
-        super().__init__(application_id="net.jeena.recoder",
+        super().__init__(application_id="net.jeena.Recoder",
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
         self.window = None
 

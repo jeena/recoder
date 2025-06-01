@@ -34,15 +34,15 @@ class TranscoderWorker:
 
     def _process_files(self):
         total = len(self.files)
-        for idx, filepath in enumerate(self.files, start=1):
+        for idx, filepath in enumerate(self.files):
             basename = os.path.basename(filepath)
             self._update_progress(f"Processing {basename} ({idx}/{total})...", idx / total)
 
             success, output_path = transcode_file(filepath, os.path.join(os.path.dirname(filepath), "transcoded"))
             if not success:
-                self._update_progress(f"Error transcoding {basename}", idx / total)
+                self._update_progress(f"Error transcoding {basename}", idx + 1 / total)
             else:
-                self._update_progress(f"Finished {basename}", idx / total)
+                self._update_progress(f"Finished {basename}", idx + 1 / total)
 
         self.is_processing = False
         self._update_progress("All done!", 1.0)

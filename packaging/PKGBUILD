@@ -6,8 +6,18 @@ pkgdesc="A GTK4 video transcoding GUI application"
 arch=('x86_64' 'aarch64')
 url="https://github.com/yourusername/recoder"
 license=('GPL3')
-depends=('gtk4' 'libadwaita' 'gobject-introspection' 'python' 'python-gobject' 'pulseaudio' 'ffmpeg')
-optdepends=('libcanberra: play system notification sounds')
+depends=(
+    'gtk4' 
+    'libadwaita' 
+    'gobject-introspection-runtime' 
+    'python' 
+    'python-gobject' 
+    'ffmpeg'
+)
+optdepends=(
+  'libcanberra: play system notification sounds'
+  'sound-theme-freedesktop: standard system sounds like "complete.oga"'
+)
 makedepends=('python-setuptools')
 source=()
 noextract=()
@@ -20,6 +30,6 @@ package() {
     install -dm755 "$pkgdir/usr/lib/recoder"
     cp -r ../src/* "$pkgdir/usr/lib/recoder/"
 
-    install -Dm644 ../data/recoder.desktop "$pkgdir/usr/share/applications/recoder.desktop"
-    install -Dm644 ../data/icons/recoder.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/recoder.png"
+    install -Dm644 ../resources/net.jeena.Recoder.desktop "$pkgdir/usr/share/applications/net.jeena.Recoder.desktop"
+    install -Dm644 ../resources/recoder256.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/recoder.png"
 }
