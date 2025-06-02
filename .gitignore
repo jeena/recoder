@@ -9,3 +9,5 @@ pkg/
 build/
 dist/
 src/recoder.egg-info/
+
+*.gresource

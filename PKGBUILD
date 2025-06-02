@@ -1,4 +1,4 @@
-# Maintainer: Jeena <your-email@example.com>
+# Maintainer: Jeena <hello@jeena.net>
 pkgname=recoder
 pkgver=1.0.0
 pkgrel=1
@@ -16,27 +16,31 @@ depends=(
 )
 optdepends=(
   'libcanberra: play system notification sounds'
-  'sound-theme-freedesktop: standard system sounds like \"complete.oga\"'
+  'sound-theme-freedesktop: standard system sounds like "complete.oga"'
 )
 makedepends=(
     'python-setuptools'
     'python-build'
     'python-installer'
+    'glib2'
 )
 source=()
 sha256sums=()
 
 build() {
     cd "$srcdir/../"  # go to your project root
+    glib-compile-resources src/resources/resources.xml \
+        --target=src/recoder/resources.gresource \
+        --sourcedir=src/resources
     python -m build --wheel --outdir dist
 }
 
 package() {
-    cd "$srcdir/../"  # back to project root where dist/ is
+    cd "$srcdir/../"
     python -m installer --destdir="$pkgdir" dist/*.whl
 
-    install -Dm644 resources/net.jeena.Recoder.desktop \
+    install -Dm644 src/resources/net.jeena.Recoder.desktop \
         "$pkgdir/usr/share/applications/net.jeena.Recoder.desktop"
-    install -Dm644 resources/net.jeena.Recoder.png \
+    install -Dm644 src/resources/net.jeena.Recoder.png \
         "$pkgdir/usr/share/icons/hicolor/256x256/apps/net.jeena.Recoder.png"
 }

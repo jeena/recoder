@@ -7,10 +7,11 @@ from gi.repository import GLib
 class TranscoderWorker:
     TIME_RE = re.compile(r"time=(\d+):(\d+):(\d+)\.(\d+)")
 
-    def __init__(self, files, progress_callback=None, done_callback=None):
+    def __init__(self, files, progress_callback=None, done_callback=None, file_done_callback=None):
         self.files = files
         self.progress_callback = progress_callback
         self.done_callback = done_callback
+        self.file_done_callback = file_done_callback
         self.is_processing = False
 
     def start(self):
@@ -27,11 +28,20 @@ class TranscoderWorker:
             basename = os.path.basename(filepath)
             self._update_progress(f"Starting {basename}", (idx - 1) / total)
 
-            success, output_path = self._transcode_file(filepath, os.path.join(os.path.dirname(filepath), "transcoded"), basename, idx, total)
+            success, output_path = self._transcode_file(
+                filepath,
+                os.path.join(os.path.dirname(filepath), "transcoded"),
+                basename,
+                idx,
+                total,
+            )
             if not success:
                 self._update_progress(f"Error transcoding {basename}", idx / total)
             else:
                 self._update_progress(f"Finished {basename}", idx / total)
+
+            if self.file_done_callback:
+                GLib.idle_add(self.file_done_callback, filepath)
 
         self.is_processing = False
         self._update_progress("All done!", 1.0)
@@ -47,9 +57,17 @@ class TranscoderWorker:
             duration = 1.0  # fallback to avoid division by zero
 
         cmd = [
-            "ffmpeg", "-y", "-i", input_path,
-            "-c:v", "libx264", "-preset", "fast",
-            "-c:a", "aac", output_path
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            "-c:v",
+            "libx264",
+            "-preset",
+            "fast",
+            "-c:a",
+            "aac",
+            output_path,
         ]
 
         process = subprocess.Popen(cmd, stderr=subprocess.PIPE, universal_newlines=True)
@@ -68,16 +86,19 @@ class TranscoderWorker:
                 self._update_progress(f"Transcoding {basename}", overall_fraction)
 
         process.wait()
-        success = (process.returncode == 0)
+        success = process.returncode == 0
         return success, output_path
 
     def _get_duration(self, input_path):
-        # Run ffprobe to get duration in seconds
         cmd = [
-            "ffprobe", "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
-            input_path
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            input_path,
         ]
         try:
             output = subprocess.check_output(cmd, universal_newlines=True)

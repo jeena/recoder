@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 import gi
 
 gi.require_version('Gtk', '4.0')
@@ -9,7 +10,14 @@ from gi.repository import Adw, Gio
 
 Adw.init()
 
+def load_resources():
+    resource_path = os.path.join(os.path.dirname(__file__), "../resources/resources.gresource")
+    resource = Gio.Resource.load(resource_path)
+    Gio.resources_register(resource)
+
 def main():
+    load_resources()
+
     from recoder.ui import RecoderWindow  # delayed import
 
     class RecoderApp(Adw.Application):
@@ -21,7 +29,7 @@ def main():
         def do_activate(self):
             if not self.window:
                 self.window = RecoderWindow(application=self)
-            self.window.present()
+            self.window.window.present()
 
     app = RecoderApp()
     return app.run(sys.argv)

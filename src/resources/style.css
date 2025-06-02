@@ -1,0 +1,13 @@
+.drop-highlight {
+    background-color: @theme_selected_bg_color;
+    border: 2px solid @theme_selected_fg_color;
+}
+
+.dim-label {
+    font-size: 16px;
+    color: @theme_unfocused_fg_color;
+}
+
+.debug-row {
+    background: red;
+}

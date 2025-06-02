@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="adw" version="1.0"/>
+
+  <object class="AdwApplicationWindow" id="main_window">
+    <property name="title">Recoder</property>
+    <property name="default-width">700</property>
+    <property name="default-height">400</property>
+    <property name="content">
+      <object class="AdwToolbarView" id="toolbar_view">
+        <child type="top">
+          <object class="AdwHeaderBar" id="header_bar">
+            <!-- You can add title or buttons here if needed -->
+          </object>
+        </child>
+        <property name="content">
+          <object class="GtkBox" id="main_box">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <property name="vexpand">true</property>
+            <child>
+              <object class="GtkOverlay" id="overlay">
+                <property name="hexpand">true</property>
+                <property name="vexpand">true</property>
+                <child>
+                  <object class="GtkScrolledWindow" id="scrolled_window">
+                    <property name="hexpand">true</property>
+                    <property name="vexpand">true</property>
+                      <child>
+                      <object class="GtkListBox" id="listbox">
+                        <property name="selection-mode">none</property>
+                        <property name="vexpand">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="overlay">
+                  <object class="GtkLabel" id="drop_hint">
+                    <property name="label">📂 Drop files here to get started</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <style>
+                      <class name="dim-label"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkProgressBar" id="progress_bar">
+                <property name="hexpand">true</property>
+                <property name="visible">False</property>
+              </object>
+            </child>
+          </object>
+        </property>
+      </object>
+    </property>
+  </object>
+</interface>

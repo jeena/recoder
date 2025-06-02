@@ -8,104 +8,75 @@ gi.require_version('Notify', '0.7')
 from gi.repository import Gtk, Adw, Gio, Gdk, GLib, Notify
 from functools import partial
 
-from recoder.config import load_config, save_config
 from recoder.transcoder_worker import TranscoderWorker
 
-class RecoderWindow(Adw.ApplicationWindow):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.set_title("Recoder")
-        self.set_default_size(700, 400)
+class FileEntryRow(Gtk.ListBoxRow):
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+        self.icon = Gtk.Image.new_from_icon_name("media-playback-pause-symbolic")
+        self.label = Gtk.Label(label=os.path.basename(path), xalign=0)
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        hbox.append(self.icon)
+        hbox.append(self.label)
+        self.set_child(hbox)
 
-        self.config = load_config()
-        self.current_dir = self.config.get("last_directory", str(os.path.expanduser("~")))
+    def mark_done(self):
+        self.icon.set_from_icon_name("emblem-ok-symbolic")
+        self.label.set_text(f"{os.path.basename(self.path)} - Done")
+
+class RecoderWindow():
+
+    def __init__(self, application, **kwargs):
 
         self.files_to_process = []
         self.transcoder = None
+        self.file_rows = {}
 
-        # UI setup
-        self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.header_bar = Adw.HeaderBar()
-        self.toolbar_view = Adw.ToolbarView()
-        self.toolbar_view.add_top_bar(self.header_bar)
-        self.toolbar_view.set_content(self.vbox)
-        self.set_content(self.toolbar_view)
+        # Load UI from resource
+        builder = Gtk.Builder()
+        builder.add_from_resource("/net/jeena/recoder/recoder.ui")
 
-        self.textview = Gtk.TextView()
-        self.textview.set_editable(False)
-        self.textbuffer = self.textview.get_buffer()
+        self.window = builder.get_object("main_window")
+        self.window.set_application(application)
+
+        self.overlay = builder.get_object("overlay")
+        self.progress = builder.get_object("progress_bar")
+        self.drop_hint = builder.get_object("drop_hint")
+        self.listbox = builder.get_object("listbox")
+        self.scrolled_window = builder.get_object("scrolled_window")
 
         self.drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
+        self.drop_target.connect("drop", self.on_drop)
         self.drop_target.connect("enter", self.on_drop_enter)
         self.drop_target.connect("leave", self.on_drop_leave)
-        self.drop_target.connect("drop", self.on_drop)
-        self.textview.add_controller(self.drop_target)
 
-        # CSS
-        self._setup_css()
+        self.window.add_controller(self.drop_target)
 
-        self.drop_hint = Gtk.Label(label="📂 Drop files here to get started")
-        self.drop_hint.add_css_class("dim-label")
-        self._setup_dim_label_css()
-
-        overlay = Gtk.Overlay()
-        overlay.set_child(self.textview)
-        overlay.add_overlay(self.drop_hint)
-        self.drop_hint.set_halign(Gtk.Align.CENTER)
-        self.drop_hint.set_valign(Gtk.Align.CENTER)
-
-        self.scrolled = Gtk.ScrolledWindow()
-        self.scrolled.set_child(overlay)
-        self.vbox.append(self.scrolled)
-        self.scrolled.set_vexpand(True)
-        self.scrolled.set_hexpand(True)
-
-        self.progress = Gtk.ProgressBar()
-        self.vbox.append(self.progress)
-        self.progress.set_hexpand(True)
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_resource("/net/jeena/recoder/style.css")
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
 
         Notify.init("Recoder")
 
-    def _setup_css(self):
-        css = b"""
-        textview.drop-highlight {
-            background-color: @theme_selected_bg_color;
-            border: 2px solid @theme_selected_fg_color;
-        }
-        """
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_data(css)
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(),
-            style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-        )
-
-    def _setup_dim_label_css(self):
-        css = b"""
-        .dim-label {
-            font-size: 16px;
-            color: @theme_unfocused_fg_color;
-        }
-        """
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_data(css)
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(),
-            style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-        )
-
     def on_drop_enter(self, drop_target, x, y):
-        self.textview.add_css_class("drop-highlight")
+        self.overlay.add_css_class("drop-highlight")
         return True
 
     def on_drop_leave(self, drop_target):
-        self.textview.remove_css_class("drop-highlight")
+        self.overlay.remove_css_class("drop-highlight")
         return True
 
     def on_drop(self, drop_target, value, x, y):
         GLib.idle_add(partial(self.process_drop_value, value))
+        self.overlay.remove_overlay(self.drop_hint)
+        self.progress.set_visible(True)
+        self.progress.set_fraction(0.0)  # optionally reset
+        self.drop_hint.set_visible(False)
         return value
 
     def process_drop_value(self, value):
@@ -129,10 +100,21 @@ class RecoderWindow(Adw.ApplicationWindow):
         if not paths:
             return False
 
-        self.textview.remove_css_class("drop-highlight")
-        self.drop_hint.set_visible(False)
+        # Clear previous listbox rows
+        children = self.listbox.get_first_child()
+        while children:
+            next_child = children.get_next_sibling()
+            self.listbox.remove(children)
+            children = next_child
+        self.file_rows.clear()
+
+        # Add new files to listbox with custom FileEntryRow
+        for path in paths:
+            row = FileEntryRow(path)
+            self.listbox.append(row)
+            self.file_rows[path] = row
+
         self.files_to_process = paths
-        self.textbuffer.set_text("\n".join(os.path.basename(p) for p in paths) + "\n")
         self.start_transcoding()
         return False
 
@@ -147,6 +129,7 @@ class RecoderWindow(Adw.ApplicationWindow):
             self.files_to_process,
             progress_callback=self.update_progress,
             done_callback=self.notify_done,
+            file_done_callback=self.mark_file_done,
         )
         self.transcoder.start()
 
@@ -154,6 +137,11 @@ class RecoderWindow(Adw.ApplicationWindow):
         self.progress.set_show_text(True)
         self.progress.set_text(text)
         self.progress.set_fraction(fraction)
+
+    def mark_file_done(self, filepath):
+        if filepath in self.file_rows:
+            row = self.file_rows[filepath]
+            GLib.idle_add(row.mark_done)
 
     def notify_done(self):
         self.progress.set_show_text(True)
