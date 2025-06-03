@@ -24,11 +24,17 @@ class Transcoder:
         thread.daemon = True
         thread.start()
 
+
     def _process_files(self):
         total = len(self.file_items)
         for idx, file_item in enumerate(self.file_items, start=1):
             filepath = file_item.file.get_path()
             basename = os.path.basename(filepath)
+
+            # Set status PROCESSING and reset progress to 0
+            GLib.idle_add(file_item.set_property, "status", FileStatus.PROCESSING)
+            GLib.idle_add(file_item.set_property, "progress", 0)
+            
             self._update_progress(f"Starting {basename}", (idx - 1) / total)
 
             success, output_path = self._transcode_file(
@@ -37,7 +43,14 @@ class Transcoder:
                 basename,
                 idx,
                 total,
+                file_item,  # Pass file_item to update progress inside _transcode_file
             )
+
+            # Update status DONE or ERROR after processing
+            new_status = FileStatus.DONE if success else FileStatus.ERROR
+            GLib.idle_add(file_item.set_property, "status", new_status)
+            GLib.idle_add(file_item.set_property, "progress", 100 if success else 0)
+
             if not success:
                 self._update_progress(f"Error transcoding {basename}", idx / total)
             else:
@@ -50,25 +63,41 @@ class Transcoder:
         self._update_progress("All done!", 1.0)
         self._notify_done()
 
-    def _transcode_file(self, input_path, output_dir, basename, idx, total):
+    def _transcode_file(self, input_path, output_dir, basename, idx, total, file_item=None):
         os.makedirs(output_dir, exist_ok=True)
-        name, _ = os.path.splitext(basename)
-        output_path = os.path.join(output_dir, f"{name}.mov")
+        output_path = self._get_output_path(output_dir, basename)
 
         duration = self._get_duration(input_path) or 1.0
         width, height, rotate = self._get_video_info(input_path)
 
+        vf = self._build_filters(width, height, rotate)
+
+        cmd = self._build_ffmpeg_command(input_path, output_path, vf)
+
+        return self._run_ffmpeg(cmd, duration, idx, total, basename, file_item, output_path)
+
+
+    def _get_output_path(self, output_dir, basename):
+        name, _ = os.path.splitext(basename)
+        return os.path.join(output_dir, f"{name}.mov")
+
+
+    def _build_filters(self, width, height, rotate):
         filters = []
 
+        # If rotated or vertical, transpose and swap dimensions
         if rotate in [90, 270] or (width and height and height > width):
             filters.append("transpose=1")
-            width, height = height, width
+            width, height = height, width  # Swap dimensions after transpose
 
+        # Resize only if not 1920x1080
         if (width, height) != (1920, 1080):
             filters.append("scale=1920:1080")
 
-        vf = ",".join(filters) if filters else None
+        return ",".join(filters) if filters else None
 
+
+    def _build_ffmpeg_command(self, input_path, output_path, vf):
         cmd = [
             "ffmpeg",
             "-y",
@@ -86,7 +115,10 @@ class Transcoder:
             cmd += ["-vf", vf]
 
         cmd.append(output_path)
+        return cmd
 
+
+    def _run_ffmpeg(self, cmd, duration, idx, total, basename, file_item, output_path):
         process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
 
         while True:
@@ -102,9 +134,17 @@ class Transcoder:
                 overall_fraction = (idx - 1 + progress_fraction) / total
                 self._update_progress(f"Transcoding {basename}", overall_fraction)
 
+                if file_item:
+                    percent = int(progress_fraction * 100)
+                    GLib.idle_add(file_item.set_property, "progress", percent)
+
         process.wait()
         success = process.returncode == 0
         return success, output_path
+
+
+
+
 
     def _get_duration(self, input_path):
         cmd = [
