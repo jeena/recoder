@@ -4,11 +4,13 @@ import subprocess
 import re
 from gi.repository import GLib
 
-class TranscoderWorker:
+from recoder.models import FileStatus, FileItem
+
+class Transcoder:
     TIME_RE = re.compile(r"time=(\d+):(\d+):(\d+)\.(\d+)")
 
-    def __init__(self, files, progress_callback=None, done_callback=None, file_done_callback=None):
-        self.files = files
+    def __init__(self, file_items, progress_callback=None, done_callback=None, file_done_callback=None):
+        self.file_items = file_items
         self.progress_callback = progress_callback
         self.done_callback = done_callback
         self.file_done_callback = file_done_callback
@@ -23,8 +25,9 @@ class TranscoderWorker:
         thread.start()
 
     def _process_files(self):
-        total = len(self.files)
-        for idx, filepath in enumerate(self.files, start=1):
+        total = len(self.file_items)
+        for idx, file_item in enumerate(self.file_items, start=1):
+            filepath = file_item.file.get_path()
             basename = os.path.basename(filepath)
             self._update_progress(f"Starting {basename}", (idx - 1) / total)
 

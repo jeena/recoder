@@ -1,39 +1,66 @@
 import os
 import gi
-import shutil
-import subprocess
 gi.require_version('Gtk', '4.0')
-gi.require_version('Adw', '1')
 gi.require_version('Notify', '0.7')
-from gi.repository import Gtk, Adw, Gio, Gdk, GLib, Notify
+
+from gi.repository import Gtk, Gdk, Gio, GLib, Notify
 from functools import partial
 
-from recoder.transcoder_worker import TranscoderWorker
+from recoder.transcoder import Transcoder
+from recoder.utils import extract_video_files, notify_done, play_complete_sound
+from recoder.models import FileStatus, FileItem
 
 class FileEntryRow(Gtk.ListBoxRow):
-    def __init__(self, path):
+    def __init__(self, item):
         super().__init__()
-        self.path = path
-        self.icon = Gtk.Image.new_from_icon_name("media-playback-pause-symbolic")
-        self.label = Gtk.Label(label=os.path.basename(path), xalign=0)
+        self.item = item
+
+        self.icon = Gtk.Image.new_from_icon_name("object-select-symbolic")
+        self.label = Gtk.Label(xalign=0, hexpand=True)
+        self.progress_label = Gtk.Label(xalign=1)
+
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         hbox.append(self.icon)
         hbox.append(self.label)
+        hbox.append(self.progress_label)
         self.set_child(hbox)
 
-    def mark_done(self):
-        self.icon.set_from_icon_name("emblem-ok-symbolic")
-        self.label.set_text(f"{os.path.basename(self.path)} - Done")
+        self.item.connect("notify::status", self.on_status_changed)
+        self.item.connect("notify::progress", self.on_progress_changed)
 
-class RecoderWindow():
+        self.update_display()
 
+    def on_status_changed(self, *_):
+        self.update_display()
+
+    def on_progress_changed(self, *_):
+        self.update_display()
+
+    def update_display(self):
+        basename = self.item.file.get_basename()
+        self.label.set_text(basename)
+
+        match self.item.status:
+            case FileStatus.WAITING:
+                self.icon.set_from_icon_name("media-playback-pause-symbolic")
+                self.progress_label.set_text("Waiting")
+            case FileStatus.PROCESSING:
+                self.icon.set_from_icon_name("view-refresh-symbolic")
+                self.progress_label.set_text(f"{self.item.progress}%")
+            case FileStatus.DONE:
+                self.icon.set_from_icon_name("task-complete-symbolic")
+                self.progress_label.set_text("Done")
+            case FileStatus.ERROR:
+                self.icon.set_from_icon_name("dialog-error-symbolic")
+                self.progress_label.set_text("Error")
+
+
+class RecoderWindow:
     def __init__(self, application, **kwargs):
-
-        self.files_to_process = []
+        self.file_items_to_process = []
         self.transcoder = None
         self.file_rows = {}
 
-        # Load UI from resource
         builder = Gtk.Builder()
         builder.add_from_resource("/net/jeena/recoder/recoder.ui")
 
@@ -50,7 +77,6 @@ class RecoderWindow():
         self.drop_target.connect("drop", self.on_drop)
         self.drop_target.connect("enter", self.on_drop_enter)
         self.drop_target.connect("leave", self.on_drop_leave)
-
         self.window.add_controller(self.drop_target)
 
         css_provider = Gtk.CssProvider()
@@ -75,60 +101,48 @@ class RecoderWindow():
         GLib.idle_add(partial(self.process_drop_value, value))
         self.overlay.remove_overlay(self.drop_hint)
         self.progress.set_visible(True)
-        self.progress.set_fraction(0.0)  # optionally reset
+        self.progress.set_fraction(0.0)
         self.drop_hint.set_visible(False)
         return value
 
     def process_drop_value(self, value):
-        if isinstance(value, Gio.File):
-            uris = [value]
-        elif isinstance(value, list):
-            uris = value
-        else:
+        file_items = extract_video_files(value)
+        if not file_items:
             return False
 
-        paths = []
-        for file in uris:
-            path = file.get_path()
-            if os.path.isdir(path):
-                for entry in os.scandir(path):
-                    if entry.is_file() and entry.name.lower().endswith((".mp4", ".mov", ".mkv", ".avi")):
-                        paths.append(entry.path)
-            else:
-                paths.append(path)
-
-        if not paths:
-            return False
-
-        # Clear previous listbox rows
-        children = self.listbox.get_first_child()
-        while children:
-            next_child = children.get_next_sibling()
-            self.listbox.remove(children)
-            children = next_child
+        # Clear previous rows
+        self.clear_listbox()
         self.file_rows.clear()
 
-        # Add new files to listbox with custom FileEntryRow
-        for path in paths:
-            row = FileEntryRow(path)
+        for file_item in file_items:
+            row = FileEntryRow(file_item)
             self.listbox.append(row)
-            self.file_rows[path] = row
+            self.file_rows[file_item] = row
 
-        self.files_to_process = paths
+        self.file_items_to_process = file_items
         self.start_transcoding()
         return False
+
+    def clear_listbox(self):
+        child = self.listbox.get_first_child()
+        while child:
+            next_child = child.get_next_sibling()
+            self.listbox.remove(child)
+            child = next_child
 
     def start_transcoding(self):
         if self.transcoder and self.transcoder.is_processing:
             return
 
+        self.window.remove_controller(self.drop_target)
+
         self.progress.set_fraction(0.0)
         self.progress.set_text("Starting transcoding...")
 
-        self.transcoder = TranscoderWorker(
-            self.files_to_process,
+        self.transcoder = Transcoder(
+            self.file_items_to_process,
             progress_callback=self.update_progress,
-            done_callback=self.notify_done,
+            done_callback=self._done_callback,
             file_done_callback=self.mark_file_done,
         )
         self.transcoder.start()
@@ -143,19 +157,9 @@ class RecoderWindow():
             row = self.file_rows[filepath]
             GLib.idle_add(row.mark_done)
 
-    def notify_done(self):
+    def _done_callback(self):
         self.progress.set_show_text(True)
         self.progress.set_text("Transcoding Complete!")
-        self.play_complete_sound()
-        notification = Notify.Notification.new(
-            "Recoder",
-            "Transcoding finished!",
-            "net.jeena.Recoder"
-        )
-        notification.show()
-
-    def play_complete_sound(self):
-        if shutil.which("canberra-gtk-play"):
-            subprocess.Popen(["canberra-gtk-play", "--id", "complete"])
-        else:
-            print("canberra-gtk-play not found.")
+        play_complete_sound()
+        notify_done("Recoder", "Transcoding finished!")
+        self.window.add_controller(self.drop_target)
