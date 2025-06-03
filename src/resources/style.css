@@ -7,7 +7,3 @@
     font-size: 16px;
     color: @theme_unfocused_fg_color;
 }
-
-.debug-row {
-    background: red;
-}

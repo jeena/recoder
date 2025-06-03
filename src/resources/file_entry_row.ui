@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="FileEntryRow" parent="GtkListBoxRow">
+    <child>
+      <object class="GtkBox" id="outer_box">
+        <property name="orientation">vertical</property>
+        <property name="spacing">0</property>
+        <property name="margin-bottom">4</property>
+        <child>
+          <object class="GtkBox" id="row_content">
+            <property name="orientation">horizontal</property>
+            <property name="spacing">12</property>
+            <property name="margin-top">6</property>
+            <property name="margin-bottom">0</property>
+            <child>
+              <object class="GtkImage" id="icon">
+                <property name="margin-start">12</property>
+                <property name="margin-end">12</property>
+                <property name="valign">center</property>
+                <property name="pixel-size">16</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label">
+                <property name="xalign">0</property>
+                <property name="hexpand">true</property>
+                <property name="ellipsize">end</property>
+                <property name="max-width-chars">40</property>
+                <style>
+                  <class name="title"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="progress_label">
+                <property name="xalign">1</property>
+                <property name="valign">center</property>
+                <property name="margin-start">12</property>
+                <property name="margin-end">12</property>
+                <style>
+                  <class name="dim-label"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLevelBar" id="level_bar">
+            <property name="hexpand">true</property>
+            <property name="valign">center</property>
+            <property name="orientation">horizontal</property>
+            <property name="sensitive">false</property>
+            <property name="min-value">0</property>
+            <property name="max-value">100</property>
+            <property name="margin-start">12</property>
+            <property name="margin-end">12</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
