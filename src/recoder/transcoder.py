@@ -52,28 +52,42 @@ class Transcoder:
 
     def _transcode_file(self, input_path, output_dir, basename, idx, total):
         os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, basename)
+        name, _ = os.path.splitext(basename)
+        output_path = os.path.join(output_dir, f"{name}.mov")
 
-        # Get duration of input file
-        duration = self._get_duration(input_path)
-        if duration is None:
-            duration = 1.0  # fallback to avoid division by zero
+        duration = self._get_duration(input_path) or 1.0
+        width, height, rotate = self._get_video_info(input_path)
+
+        filters = []
+
+        if rotate in [90, 270] or (width and height and height > width):
+            filters.append("transpose=1")
+            width, height = height, width
+
+        if (width, height) != (1920, 1080):
+            filters.append("scale=1920:1080")
+
+        vf = ",".join(filters) if filters else None
 
         cmd = [
             "ffmpeg",
             "-y",
-            "-i",
-            input_path,
-            "-c:v",
-            "libx264",
-            "-preset",
-            "fast",
-            "-c:a",
-            "aac",
-            output_path,
+            "-i", input_path,
+            "-vcodec", "dnxhd",
+            "-acodec", "pcm_s16le",
+            "-b:v", "36M",
+            "-pix_fmt", "yuv422p",
+            "-r", "30000/1001",
+            "-f", "mov",
+            "-map_metadata", "0",
         ]
 
-        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, universal_newlines=True)
+        if vf:
+            cmd += ["-vf", vf]
+
+        cmd.append(output_path)
+
+        process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
 
         while True:
             line = process.stderr.readline()
@@ -83,7 +97,7 @@ class Transcoder:
             match = self.TIME_RE.search(line)
             if match:
                 hours, minutes, seconds, milliseconds = map(int, match.groups())
-                elapsed = hours * 3600 + minutes * 60 + seconds + milliseconds / 100
+                elapsed = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0
                 progress_fraction = min(elapsed / duration, 1.0)
                 overall_fraction = (idx - 1 + progress_fraction) / total
                 self._update_progress(f"Transcoding {basename}", overall_fraction)
@@ -95,19 +109,34 @@ class Transcoder:
     def _get_duration(self, input_path):
         cmd = [
             "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
+            "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
             input_path,
         ]
         try:
-            output = subprocess.check_output(cmd, universal_newlines=True)
+            output = subprocess.check_output(cmd, text=True)
             return float(output.strip())
         except Exception:
             return None
+
+    def _get_video_info(self, input_path):
+        cmd = [
+            "ffprobe",
+            "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=width,height:stream_tags=rotate",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            input_path,
+        ]
+        try:
+            output = subprocess.check_output(cmd, text=True).splitlines()
+            width = int(output[0])
+            height = int(output[1])
+            rotate = int(output[2]) if len(output) > 2 else 0
+            return width, height, rotate
+        except Exception:
+            return None, None, 0
 
     def _update_progress(self, text, fraction):
         if self.progress_callback:
