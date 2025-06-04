@@ -65,7 +65,7 @@
 
                 <child type="overlay">
                   <object class="GtkLabel" id="drop_hint">
-                    <property name="label">📂 Drop files here to get started</property>
+                    <property name="label">📂 Drop files or folders here to get started</property>
                     <property name="halign">center</property>
                     <property name="valign">center</property>
                     <style>
