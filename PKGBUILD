@@ -41,6 +41,6 @@ package() {
 
     install -Dm644 src/resources/net.jeena.Recoder.desktop \
         "$pkgdir/usr/share/applications/net.jeena.Recoder.desktop"
-    install -Dm644 src/resources/net.jeena.Recoder.png \
-        "$pkgdir/usr/share/icons/hicolor/256x256/apps/net.jeena.Recoder.png"
+    install -Dm644 src/resources/net.jeena.Recoder.svg \
+        "$pkgdir/usr/share/icons/hicolor/scalable/apps/net.jeena.Recoder.svg"
 }

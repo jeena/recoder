@@ -5,10 +5,10 @@ from gi.repository import Gtk
 from recoder.models import FileStatus
 
 ICONS = {
-    FileStatus.WAITING: "media-playback-pause-symbolic",
-    FileStatus.PROCESSING: "view-refresh-symbolic",
-    FileStatus.DONE: "task-complete-symbolic",
-    FileStatus.ERROR: "dialog-error-symbolic",
+    FileStatus.WAITING: "network-idle-symbolic",
+    FileStatus.PROCESSING: "network-transmit-symbolic",
+    FileStatus.DONE: "check-plain-symbolic",
+    FileStatus.ERROR: "network-error-symbolic",
 }
 
 LABELS = {
