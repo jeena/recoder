@@ -83,7 +83,8 @@ class Transcoder(GObject.GObject):
             GLib.idle_add(file_item.set_property, "status", new_status)
             GLib.idle_add(file_item.set_property, "progress", 100 if success else 0)
 
-            if not success:
+            # Fix: Only set ERROR if not stopped by user
+            if not success and not self._stop_requested:
                 self.batch_status = BatchStatus.ERROR
                 break
 

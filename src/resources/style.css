@@ -1,6 +1,9 @@
 .drop-highlight {
-    background-color: @theme_selected_bg_color;
-    border: 2px solid @theme_selected_fg_color;
+    background-color: @theme_selected_bg_color;  /* good: uses theme color */
+    border: 2px solid @theme_selected_fg_color;  /* good contrast */
+    border-radius: 6px;  /* soften edges */
+    box-shadow: 0 0 8px @theme_selected_bg_color; /* subtle glow */
+    transition: background-color 150ms ease, box-shadow 150ms ease; /* smooth */
 }
 
 .dim-label {
