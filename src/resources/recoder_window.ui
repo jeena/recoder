@@ -12,7 +12,18 @@
       <object class="AdwToolbarView" id="toolbar_view">
         <child type="top">
           <object class="AdwHeaderBar" id="header_bar">
-            <!-- Optional header bar content -->
+              <child>
+                <object class="GtkButton" id="btn_transcode">
+                  <property name="label">Transcode</property>
+                  <property name="sensitive">False</property>
+                </object>
+              </child>
+              <child>
+                <object class="GtkButton" id="btn_cancel">
+                  <property name="label">Cancel</property>
+                  <property name="visible">False</property>
+                </object>
+              </child>
           </object>
         </child>
 
