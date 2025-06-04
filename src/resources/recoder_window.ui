@@ -18,6 +18,13 @@
                   <property name="sensitive">False</property>
                 </object>
               </child>
+              <child type="title">
+                <object class="GtkLabel" id="folder_label">
+                  <property name="ellipsize">end</property>
+                  <property name="hexpand">True</property>
+                  <property name="halign">center</property>
+                </object>
+              </child>
               <child type="end">
                 <object class="GtkButton" id="btn_cancel">
                   <property name="label">Cancel</property>

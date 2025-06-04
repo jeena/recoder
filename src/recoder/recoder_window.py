@@ -27,11 +27,13 @@ class RecoderWindow(Adw.ApplicationWindow):
     btn_transcode = Gtk.Template.Child()
     btn_cancel = Gtk.Template.Child()
     progress_bar = Gtk.Template.Child()
+    folder_label = Gtk.Template.Child()
 
     def __init__(self, application):
         super().__init__(application=application)
 
         self.file_items_to_process = []
+        self.current_folder_name = None
         self.transcoder = None
         self.file_rows = {}
         self.is_paused = False
@@ -56,6 +58,19 @@ class RecoderWindow(Adw.ApplicationWindow):
         Notify.init("Recoder")
 
     def process_drop_value(self, value):
+
+        # value could be a list of Gio.File or a single Gio.File
+        # Assuming it's a list:
+        folder_file = None
+        if isinstance(value, list) and len(value) > 0:
+            folder_file = value[0]
+        elif hasattr(value, 'get_path'):
+            folder_file = value
+
+        if folder_file:
+            # Set the current folder name for UI
+            self.current_folder_name = folder_file.get_basename()
+
         file_items = extract_video_files(value)
         if not file_items:
             return False

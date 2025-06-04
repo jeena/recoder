@@ -41,7 +41,16 @@ class UIStateManager:
         if handler:
             handler()
 
+    def _update_title(self, folder_name=None):
+        w = self.window
+        base = "Recoder"
+        if folder_name:
+            w.folder_label.set_text(f"{base} — {folder_name}")
+        else:
+            w.folder_label.set_text(base)
+
     def _handle_idle(self):
+        self._update_title(None)
         w = self.window
         w.clear_listbox()
         w.file_rows.clear()
@@ -58,6 +67,7 @@ class UIStateManager:
 
     def _handle_files_loaded(self):
         w = self.window
+        self._update_title(w.current_folder_name)
         w.drop_hint.set_visible(False)
         w.progress_bar.set_visible(False)
         w.btn_transcode.set_visible(True)
@@ -100,6 +110,7 @@ class UIStateManager:
 
     def _handle_error(self):
         w = self.window
+        self._update_title(w.current_folder_name)
         w.drop_hint.set_visible(False)
         w.progress_bar.set_visible(False)
         w.btn_transcode.set_visible(False)
