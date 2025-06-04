@@ -29,7 +29,7 @@ class UIStateManager:
             AppState.TRANSCODING: self._handle_transcoding,
             AppState.PAUSED: self._handle_paused,
             AppState.DONE: self._handle_done,
-            AppState.STOPPED: self._handle_idle,  # Reset UI on STOPPED
+            AppState.STOPPED: self._handle_idle,
             AppState.ERROR: self._handle_error,
         }
 
@@ -72,7 +72,7 @@ class UIStateManager:
         w.progress_bar.set_visible(False)
         w.btn_transcode.set_visible(True)
         w.btn_transcode.set_sensitive(True)
-        w.btn_transcode.set_label("Start Transcoding")
+        w.btn_transcode.set_label("Transcode")
         w.btn_transcode.add_css_class("suggested-action")
         w.btn_cancel.set_visible(True)
         w.is_paused = False
