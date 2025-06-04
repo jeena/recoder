@@ -1,14 +1,15 @@
 import gi
 import signal
+from enum import Enum, auto
+from functools import partial
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 gi.require_version('Notify', '0.7')
 
 from gi.repository import Gtk, Gdk, Gio, Adw, GLib, Notify
-from functools import partial
 
-from recoder.transcoder import Transcoder
+from recoder.transcoder import Transcoder, BatchStatus
 from recoder.utils import extract_video_files, notify_done, play_complete_sound
 from recoder.file_entry_row import FileEntryRow
 
@@ -45,27 +46,99 @@ class DropHandler:
         return value
 
 
+class AppState(Enum):
+    IDLE = auto()             # Nothing loaded, waiting for drop
+    FILES_LOADED = auto()     # Files dropped, ready to start transcoding
+    TRANSCODING = auto()      # Transcoding in progress
+    PAUSED = auto()           # Transcoding paused
+    DONE = auto()             # Transcoding finished
+    STOPPED = auto()          # Transcoding canceled
+    ERROR = auto()            # Error occurred
+
+
 class UIStateManager:
     def __init__(self, window):
         self.window = window
+        self.handlers = {
+            AppState.IDLE: self._handle_idle,
+            AppState.FILES_LOADED: self._handle_files_loaded,
+            AppState.TRANSCODING: self._handle_transcoding,
+            AppState.PAUSED: self._handle_paused,
+            AppState.DONE: self._handle_done,
+            AppState.STOPPED: lambda: self.set_state(AppState.IDLE),
+            AppState.ERROR: self._handle_error,
+        }
 
-    def reset_ui(self):
-        self.window.btn_transcode.set_label("Start Transcoding")
-        self.window.btn_transcode.set_sensitive(False)
-        self.window.btn_transcode.remove_css_class("suggested-action")
-        self.window.btn_cancel.set_visible(False)
-        self.window.progress_bar.set_fraction(0.0)
-        self.window.progress_bar.set_text("")
-        self.window.progress_bar.set_visible(False)
-        self.window.drop_hint.set_visible(True)
+    def set_state(self, state: AppState):
+        handler = self.handlers.get(state)
+        if handler:
+            handler()
 
-        if self.window.drop_hint.get_parent() != self.window.overlay:
-            self.window.overlay.add_overlay(self.window.drop_hint)
+    def _handle_idle(self):
+        w = self.window
+        w.clear_listbox()
+        w.file_rows.clear()
+        w.file_items_to_process = []
+        w.is_paused = False
+        w.progress_bar.set_visible(False)
+        w.progress_bar.set_fraction(0.0)
+        w.progress_bar.set_text("")
+        w.drop_hint.set_visible(True)
+        if w.drop_hint.get_parent() != w.overlay:
+            w.overlay.add_overlay(w.drop_hint)
+        w.btn_transcode.set_visible(False)
+        w.btn_cancel.set_visible(False)
 
-        self.window.clear_listbox()
-        self.window.file_rows.clear()
-        self.window.file_items_to_process = []
-        self.window.is_paused = False
+    def _handle_files_loaded(self):
+        w = self.window
+        w.drop_hint.set_visible(False)
+        w.progress_bar.set_visible(False)
+        w.btn_transcode.set_visible(True)
+        w.btn_transcode.set_sensitive(True)
+        w.btn_transcode.set_label("Start Transcoding")
+        w.btn_transcode.add_css_class("suggested-action")
+        w.btn_cancel.set_visible(False)
+        w.is_paused = False
+
+    def _handle_transcoding(self):
+        w = self.window
+        w.drop_hint.set_visible(False)
+        w.progress_bar.set_visible(True)
+        w.btn_transcode.set_visible(True)
+        w.btn_transcode.set_sensitive(True)
+        w.btn_transcode.set_label("Pause")
+        w.btn_transcode.remove_css_class("suggested-action")
+        w.btn_cancel.set_visible(False)
+        w.is_paused = False
+
+    def _handle_paused(self):
+        w = self.window
+        w.drop_hint.set_visible(False)
+        w.progress_bar.set_visible(True)
+        w.btn_transcode.set_visible(True)
+        w.btn_transcode.set_sensitive(True)
+        w.btn_transcode.set_label("Resume")
+        w.btn_cancel.set_visible(True)
+        w.is_paused = True
+
+    def _handle_done(self):
+        w = self.window
+        w.drop_hint.set_visible(False)
+        w.progress_bar.set_visible(True)
+        w.progress_bar.set_fraction(1.0)
+        w.btn_transcode.set_visible(False)
+        w.btn_transcode.remove_css_class("suggested-action")
+        w.btn_cancel.set_visible(True)
+        w.is_paused = False
+
+    def _handle_error(self):
+        w = self.window
+        w.drop_hint.set_visible(False)
+        w.progress_bar.set_visible(False)
+        w.btn_transcode.set_visible(False)
+        w.btn_cancel.set_visible(True)
+        w.is_paused = False
+
 
 
 @Gtk.Template(resource_path="/net/jeena/recoder/recoder_window.ui")
@@ -73,12 +146,12 @@ class RecoderWindow(Adw.ApplicationWindow):
     __gtype_name__ = "RecoderWindow"
 
     overlay = Gtk.Template.Child()
-    progress_bar = Gtk.Template.Child()
     drop_hint = Gtk.Template.Child()
     listbox = Gtk.Template.Child()
     scrolled_window = Gtk.Template.Child()
     btn_transcode = Gtk.Template.Child()
     btn_cancel = Gtk.Template.Child()
+    progress_bar = Gtk.Template.Child()
 
     def __init__(self, application):
         super().__init__(application=application)
@@ -88,16 +161,15 @@ class RecoderWindow(Adw.ApplicationWindow):
         self.file_rows = {}
         self.is_paused = False
 
-        self.ui_manager = UIStateManager(self)
         self.drop_handler = DropHandler(self.overlay, self.drop_hint, self.progress_bar, self.process_drop_value)
         self.add_controller(self.drop_handler.controller())
+
+        self.ui_manager = UIStateManager(self)
 
         self.btn_transcode.connect("clicked", self.on_transcode_clicked)
         self.btn_cancel.connect("clicked", self.on_cancel_clicked)
 
-        self.btn_transcode.set_sensitive(False)
-        self.btn_cancel.set_visible(False)
-        self.btn_transcode.set_label("Start Transcoding")
+        self.ui_manager.set_state(AppState.IDLE)
 
         css_provider = Gtk.CssProvider()
         css_provider.load_from_resource("/net/jeena/recoder/style.css")
@@ -123,9 +195,7 @@ class RecoderWindow(Adw.ApplicationWindow):
             self.file_rows[file_item.file] = row
 
         self.file_items_to_process = file_items
-        self.btn_transcode.set_sensitive(True)
-        self.btn_transcode.add_css_class("suggested-action")
-        self.btn_transcode.set_label("Start Transcoding")
+        self.ui_manager.set_state(AppState.FILES_LOADED)
         return False
 
     def clear_listbox(self):
@@ -149,67 +219,49 @@ class RecoderWindow(Adw.ApplicationWindow):
             return
 
         self.remove_controller(self.drop_handler.controller())
-        self.btn_transcode.set_label("Pause")
-        self.btn_transcode.set_sensitive(True)
-        self.btn_transcode.remove_css_class("suggested-action")
-        self.btn_cancel.set_visible(False)
-        self.is_paused = False
 
-        self.progress_bar.set_fraction(0.0)
-        self.progress_bar.set_text("Starting transcoding...")
-
-        self.transcoder = Transcoder(
-            self.file_items_to_process,
-            progress_callback=self.update_progress,
-            done_callback=self._done_callback,
-            file_done_callback=self.mark_file_done,
-        )
+        self.transcoder = Transcoder(self.file_items_to_process)
+        self.transcoder.connect("notify::batch-progress", self.on_transcoder_progress)
+        self.transcoder.connect("notify::batch-status", self.on_transcoder_status)
         self.transcoder.start()
+
+        self.ui_manager.set_state(AppState.TRANSCODING)
 
     def pause_transcoding(self):
         if self.transcoder:
             self.transcoder.pause()
             self.is_paused = True
-            self.btn_transcode.set_label("Resume")
-            self.progress_bar.set_text("Paused")
-            self.btn_cancel.set_visible(True)
+            self.ui_manager.set_state(AppState.PAUSED)
 
     def resume_transcoding(self):
         if self.transcoder:
             self.transcoder.resume()
             self.is_paused = False
-            self.btn_transcode.set_label("Pause")
-            self.progress_bar.set_text("Resuming...")
-            self.btn_cancel.set_visible(False)
+            self.ui_manager.set_state(AppState.TRANSCODING)
 
     def on_cancel_clicked(self, button):
         if self.transcoder and self.transcoder.is_processing:
             self.transcoder.stop()
         self.transcoder = None
         self.add_controller(self.drop_handler.controller())
-        self.ui_manager.reset_ui()
+        self.ui_manager.set_state(AppState.STOPPED)
 
-    def update_progress(self, text, fraction):
-        self.progress_bar.set_show_text(True)
-        self.progress_bar.set_text(text)
-        self.progress_bar.set_fraction(fraction)
+    def on_transcoder_progress(self, transcoder, param):
+        self.progress_bar.set_fraction(transcoder.batch_progress / 100.0)
+        self.progress_bar.set_visible(True)
 
-    def mark_file_done(self, filepath):
-        if filepath in self.file_rows:
-            row = self.file_rows[filepath]
-            GLib.idle_add(row.mark_done)
+    def on_transcoder_status(self, transcoder, param):
+        if transcoder.batch_status == BatchStatus.DONE:
+            play_complete_sound()
+            notify_done("Recoder", "Transcoding finished!")
+            self.add_controller(self.drop_handler.controller())
+            self.ui_manager.set_state(AppState.DONE)
 
-    def _done_callback(self):
-        self.progress_bar.set_show_text(True)
-        self.progress_bar.set_text("Transcoding Complete!")
-        play_complete_sound()
-        notify_done("Recoder", "Transcoding finished!")
-        self.add_controller(self.drop_handler.controller())
-        self.btn_transcode.set_label("Start Transcoding")
-        self.btn_transcode.set_sensitive(False)
-        self.btn_cancel.set_visible(False)
-        self.is_paused = False
+        elif transcoder.batch_status == BatchStatus.STOPPED:
+            self.add_controller(self.drop_handler.controller())
+            self.ui_manager.set_state(AppState.STOPPED)
 
-        self.drop_hint.set_visible(True)
-        if self.drop_hint.get_parent() != self.overlay:
-            self.overlay.add_overlay(self.drop_hint)
+        elif transcoder.batch_status == BatchStatus.ERROR:
+            notify_done("Recoder", "An error occurred during transcoding.")
+            self.add_controller(self.drop_handler.controller())
+            self.ui_manager.set_state(AppState.ERROR)
