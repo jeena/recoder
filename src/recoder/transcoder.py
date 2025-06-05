@@ -4,7 +4,7 @@ import subprocess
 import re
 import signal
 
-from gi.repository import GLib, GObject
+from gi.repository import GLib, GObject, Gio
 from recoder.models import FileStatus, FileItem
 
 
@@ -25,6 +25,9 @@ class Transcoder(GObject.GObject):
     batch_progress = GObject.Property(type=int, minimum=0, maximum=100, default=0)
     batch_status = GObject.Property(type=BatchStatus, default=BatchStatus.IDLE)
 
+    # Property bound to GSettings key for output folder template
+    output_folder_template = GObject.Property(type=str, default="transcoded")
+
     def __init__(self, file_items):
         super().__init__()
         self.file_items = file_items
@@ -33,6 +36,20 @@ class Transcoder(GObject.GObject):
         self._paused = threading.Event()
         self._paused.set()
         self._process = None
+
+        self.settings = Gio.Settings.new("net.jeena.recoder.preferences")
+        self.settings.bind(
+            "output-folder-template", self,
+            "output_folder_template",
+            Gio.SettingsBindFlags.DEFAULT
+        )
+
+    def get_output_folder(self, path):
+        source_folder = os.path.basename(os.path.dirname(path))
+        folder_name = self.output_folder_template.replace("{{source_folder_name}}", source_folder)
+        folder_name = os.path.expanduser(folder_name)
+        output_folder = os.path.join(os.path.dirname(path), folder_name)
+        return output_folder
 
     def start(self):
         if self.is_processing:
@@ -76,14 +93,13 @@ class Transcoder(GObject.GObject):
             GLib.idle_add(file_item.set_property, "status", FileStatus.PROCESSING)
             GLib.idle_add(file_item.set_property, "progress", 0)
 
-            success, _ = self._transcode_file(path, os.path.join(os.path.dirname(path), "transcoded"),
-                                              base, idx, total, file_item)
+            output_folder = self.get_output_folder(path)
+            success, _ = self._transcode_file(path, output_folder, base, idx, total, file_item)
 
             new_status = FileStatus.DONE if success else FileStatus.ERROR
             GLib.idle_add(file_item.set_property, "status", new_status)
             GLib.idle_add(file_item.set_property, "progress", 100 if success else 0)
 
-            # Fix: Only set ERROR if not stopped by user
             if not success and not self._stop_requested:
                 self.batch_status = BatchStatus.ERROR
                 break
