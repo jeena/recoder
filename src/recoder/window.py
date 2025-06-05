@@ -14,9 +14,10 @@ from recoder.utils import extract_video_files, notify_done, play_complete_sound
 from recoder.file_entry_row import FileEntryRow
 from recoder.drop_handler import DropHandler
 from recoder.app_state import AppState, AppStateManager, UIStateManager
+from recoder.preferences import RecoderPreferences
 
 
-@Gtk.Template(resource_path="/net/jeena/recoder/recoder_window.ui")
+@Gtk.Template(resource_path="/net/jeena/recoder/window.ui")
 class RecoderWindow(Adw.ApplicationWindow):
     __gtype_name__ = "RecoderWindow"
 
@@ -28,9 +29,18 @@ class RecoderWindow(Adw.ApplicationWindow):
     btn_cancel = Gtk.Template.Child()
     progress_bar = Gtk.Template.Child()
     folder_label = Gtk.Template.Child()
+    btn_preferences = Gtk.Template.Child()
 
     def __init__(self, application):
         super().__init__(application=application)
+        
+        self.state_settings = Gio.Settings.new("net.jeena.recoder.state")
+
+        # Bind window size and state to your window properties
+        self.state_settings.bind("width", self, "default-width", Gio.SettingsBindFlags.DEFAULT)
+        self.state_settings.bind("height", self, "default-height", Gio.SettingsBindFlags.DEFAULT)
+        self.state_settings.bind("is-maximized", self, "maximized", Gio.SettingsBindFlags.DEFAULT)
+        self.state_settings.bind("is-fullscreen", self, "fullscreened", Gio.SettingsBindFlags.DEFAULT)
 
         self.file_items_to_process = []
         self.current_folder_name = None
@@ -44,6 +54,7 @@ class RecoderWindow(Adw.ApplicationWindow):
 
         self.btn_transcode.connect("clicked", self.on_transcode_clicked)
         self.btn_cancel.connect("clicked", self.on_cancel_clicked)
+        self.btn_preferences.connect("clicked", self.on_preferences_clicked)
 
         self.app_state_manager.state = AppState.IDLE
 
@@ -57,10 +68,24 @@ class RecoderWindow(Adw.ApplicationWindow):
 
         Notify.init("Recoder")
 
-    def process_drop_value(self, value):
+        self.preferences_window = None
 
-        # value could be a list of Gio.File or a single Gio.File
-        # Assuming it's a list:
+    def on_preferences_clicked(self, button):
+        if self.preferences_window is None:
+            self.preferences_window = RecoderPreferences()
+            self.preferences_window.set_transient_for(self)
+            self.preferences_window.set_modal(True)
+            self.preferences_window.connect("close-request", self.on_preferences_window_close)
+
+        self.preferences_window.present()
+
+    def on_preferences_window_close(self, window):
+        window.hide()
+        # Don't destroy, just hide
+        return True  # stops further handlers, prevents default destruction
+
+
+    def process_drop_value(self, value):
         folder_file = None
         if isinstance(value, list) and len(value) > 0:
             folder_file = value[0]
@@ -68,7 +93,6 @@ class RecoderWindow(Adw.ApplicationWindow):
             folder_file = value
 
         if folder_file:
-            # Set the current folder name for UI
             self.current_folder_name = folder_file.get_basename()
 
         file_items = extract_video_files(value)
@@ -106,8 +130,6 @@ class RecoderWindow(Adw.ApplicationWindow):
     def start_transcoding(self):
         if not self.file_items_to_process:
             return
-
-        # no need to remove drop_controller here
 
         self.transcoder = Transcoder(self.file_items_to_process)
         self.transcoder.connect("notify::batch-progress", self.on_transcoder_progress)

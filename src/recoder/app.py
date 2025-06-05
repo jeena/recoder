@@ -18,7 +18,7 @@ def load_resources():
 def main():
     load_resources()
 
-    from recoder.recoder_window import RecoderWindow  # delayed import
+    from recoder.window import RecoderWindow  # delayed import
 
     class RecoderApp(Adw.Application):
         def __init__(self):
