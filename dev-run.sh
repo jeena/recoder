@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This is just a helper for development
+
 # Compile resources
 glib-compile-resources src/resources/resources.xml \
     --target=src/recoder/resources.gresource \

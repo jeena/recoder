@@ -5,11 +5,18 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 
-from gi.repository import Adw, Gio
+from gi.repository import Adw, Gio, Gtk
 from importlib.resources import files
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("recoder")
+except PackageNotFoundError:
+    __version__ = "unknown"
+
+APP_NAME = "Recoder"
 
 Adw.init()
-
 
 def load_resources():
     resource_path = files("recoder").joinpath("resources.gresource")
@@ -30,6 +37,7 @@ def main():
                 application_id="net.jeena.Recoder",
                 flags=Gio.ApplicationFlags.FLAGS_NONE
             )
+
             self.window = None
             self.preferences_window = None
 
@@ -45,14 +53,30 @@ def main():
             preferences_action = Gio.SimpleAction.new("preferences", None)
             preferences_action.connect("activate", self.on_preferences_activate)
             self.add_action(preferences_action)
-            # Add the accelerator for Preferences (Ctrl+,)
             self.set_accels_for_action("app.preferences", ["<Primary>comma"])
+
+            about_action = Gio.SimpleAction.new("about", None)
+            about_action.connect("activate", self.on_about_activate)
+            self.add_action(about_action)
 
         def do_activate(self):
             if not self.window:
                 self.window = RecoderWindow(self)
                 self.window.connect("close-request", self.on_window_close)
             self.window.present()
+
+        def on_about_activate(self, action, param):
+            about = Adw.AboutWindow(
+                application_name=APP_NAME,
+                application_icon=self.get_application_id(),
+                version=__version__,
+                developer_name="Jeena",
+                license_type=Gtk.License.GPL_3_0,
+                website="https://github.com/jeena/recoder",
+                issue_url="https://github.com/jeena/recoder/issues",
+                transient_for=self.window,
+            )
+            about.present()
 
         def on_preferences_activate(self, action, param):
             if not self.preferences_window:

@@ -9,6 +9,10 @@
       <attribute name="action">app.preferences</attribute>
     </item>
     <item>
+      <attribute name="label">About Recoder</attribute>
+      <attribute name="action">app.about</attribute>
+    </item>
+    <item>
       <attribute name="label">Quit</attribute>
       <attribute name="action">app.quit</attribute>
     </item>

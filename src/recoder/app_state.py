@@ -2,6 +2,8 @@ import gi
 gi.require_version("GObject", "2.0")
 from gi.repository import GObject
 
+from recoder.app import APP_NAME
+
 
 class AppState(GObject.GEnum):
     IDLE = 0
@@ -43,11 +45,10 @@ class UIStateManager:
 
     def _update_title(self, folder_name=None):
         w = self.window
-        base = "Recoder"
         if folder_name:
-            w.folder_label.set_text(f"{base} — {folder_name}")
+            w.folder_label.set_text(f"{APP_NAME} — {folder_name}")
         else:
-            w.folder_label.set_text(base)
+            w.folder_label.set_text(APP_NAME)
 
     def _handle_idle(self):
         self._update_title(None)

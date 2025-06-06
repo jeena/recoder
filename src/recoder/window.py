@@ -15,6 +15,7 @@ from recoder.file_entry_row import FileEntryRow
 from recoder.drop_handler import DropHandler
 from recoder.app_state import AppState, AppStateManager, UIStateManager
 from recoder.preferences import RecoderPreferences
+from recoder.app import APP_NAME
 
 
 @Gtk.Template(resource_path="/net/jeena/recoder/window.ui")
@@ -32,7 +33,7 @@ class RecoderWindow(Adw.ApplicationWindow):
 
     def __init__(self, application):
         super().__init__(application=application)
-        
+
         self.state_settings = Gio.Settings.new("net.jeena.recoder.state")
 
         # Bind window size and state to your window properties
@@ -68,7 +69,7 @@ class RecoderWindow(Adw.ApplicationWindow):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
-        Notify.init("Recoder")
+        Notify.init(APP_NAME)
 
 
     def process_drop_value(self, value):
@@ -148,12 +149,12 @@ class RecoderWindow(Adw.ApplicationWindow):
     def on_transcoder_status(self, transcoder, param):
         if transcoder.batch_status == BatchStatus.DONE:
             play_complete_sound()
-            notify_done("Recoder", "Transcoding finished!")
+            notify_done(APP_NAME, "Transcoding finished!")
             self.app_state_manager.state = AppState.DONE
 
         elif transcoder.batch_status == BatchStatus.STOPPED:
             self.app_state_manager.state = AppState.STOPPED
 
         elif transcoder.batch_status == BatchStatus.ERROR:
-            notify_done("Recoder", "An error occurred during transcoding.")
+            notify_done(APP_NAME, "An error occurred during transcoding.")
             self.app_state_manager.state = AppState.ERROR
