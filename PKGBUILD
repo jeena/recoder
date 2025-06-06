@@ -13,6 +13,7 @@ depends=(
     'python' 
     'python-gobject' 
     'ffmpeg'
+    'glib2'
 )
 optdepends=(
   'libcanberra: play system notification sounds'
@@ -29,9 +30,12 @@ sha256sums=()
 
 build() {
     cd "$srcdir/../"  # go to your project root
+
     glib-compile-resources src/resources/resources.xml \
         --target=src/recoder/resources.gresource \
         --sourcedir=src/resources
+
+    
     python -m build --wheel --outdir dist
 }
 
@@ -43,4 +47,8 @@ package() {
         "$pkgdir/usr/share/applications/net.jeena.Recoder.desktop"
     install -Dm644 src/resources/net.jeena.Recoder.svg \
         "$pkgdir/usr/share/icons/hicolor/scalable/apps/net.jeena.Recoder.svg"
+    install -Dm644 src/resources/net.jeena.recoder.gschema.xml \
+        "$pkgdir/usr/share/glib-2.0/schemas/net.jeena.recoder.gschema.xml"
 }
+
+install=recoder.install
