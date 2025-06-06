@@ -7,7 +7,7 @@ from recoder.models import FileStatus
 ICONS = {
     FileStatus.WAITING: "network-idle-symbolic",
     FileStatus.PROCESSING: "network-transmit-symbolic",
-    FileStatus.DONE: "check-plain-symbolic",
+    FileStatus.DONE: "checkmark-symbolic",
     FileStatus.ERROR: "network-error-symbolic",
 }
 
@@ -36,7 +36,6 @@ class FileEntryRow(Gtk.ListBoxRow):
     def update_display(self, *args):
         basename = self.item.file.get_basename()
         self.label.set_text(basename)
-
         icon_name = ICONS.get(self.item.status, "object-select-symbolic")
         self.icon.set_from_icon_name(icon_name)
 

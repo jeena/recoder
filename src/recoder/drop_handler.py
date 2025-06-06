@@ -37,11 +37,11 @@ class DropHandler:
     def on_drop_enter(self, *_):
         if not self._accepting:
             return False
-        self.w.overlay.add_css_class("drop-highlight")
+        self.w.drop_hint.add_css_class("drop-highlight")
         return True
 
     def on_drop_leave(self, *_):
-        self.w.overlay.remove_css_class("drop-highlight")
+        self.w.drop_hint.remove_css_class("drop-highlight")
         return True
 
     def on_drop(self, _, value, __, ___):

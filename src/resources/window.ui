@@ -3,6 +3,17 @@
   <requires lib="gtk" version="4.0"/>
   <requires lib="adw" version="1.0"/>
 
+  <menu id="main_menu">
+    <item>
+      <attribute name="label">Preferences</attribute>
+      <attribute name="action">app.preferences</attribute>
+    </item>
+    <item>
+      <attribute name="label">Quit</attribute>
+      <attribute name="action">app.quit</attribute>
+    </item>
+  </menu>
+
   <template class="RecoderWindow" parent="AdwApplicationWindow">
     <property name="title">Recoder</property>
     <property name="default-width">700</property>
@@ -26,15 +37,21 @@
               </object>
             </child>
             <child type="end">
-              <object class="GtkButton" id="btn_preferences">
-                <property name="icon-name">emblem-system-symbolic</property>
-                <property name="tooltip-text">Preferences</property>
+              <object class="GtkMenuButton" id="menu_button">
+                <property name="icon-name">open-menu-symbolic</property>
+                <property name="menu-model">main_menu</property>
+                <property name="tooltip-text">Menu</property>
               </object>
-            </child>
+            </child>            
             <child type="end">
-              <object class="GtkButton" id="btn_cancel">
-                <property name="label">Cancel</property>
+              <object class="GtkButton" id="btn_clear">
+                <property name="icon-name">edit-clear-symbolic</property>
+                <property name="tooltip-text">Clear</property>
                 <property name="visible">False</property>
+                <property name="can-focus">False</property>
+                <style>
+                  <class name="flat"/>
+                </style>
               </object>
             </child>
           </object>
@@ -70,15 +87,65 @@
                 </child>
 
                 <child type="overlay">
-                  <object class="GtkLabel" id="drop_hint">
-                    <property name="label">📂 Drop files or folders here to get started</property>
-                    <property name="halign">center</property>
-                    <property name="valign">center</property>
-                    <style>
-                      <class name="dim-label"/>
-                    </style>
+                  <object class="GtkBox" id="drop_hint">
+                    <property name="orientation">vertical</property>
+                    <property name="halign">fill</property>
+                    <property name="valign">fill</property>
+                    <property name="spacing">48</property>
+                    <property name="hexpand">true</property>
+                    <property name="vexpand">true</property>
+
+                    <!-- Inner box to center content -->
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="vexpand">true</property>
+                        <property name="halign">center</property>
+                        <property name="valign">center</property>
+                        <property name="spacing">48</property>
+
+                        <child>
+                          <object class="GtkBox">
+                            <property name="orientation">horizontal</property>
+                            <property name="halign">center</property>
+                            <property name="spacing">48</property>
+
+                            <child>
+                              <object class="GtkImage">
+                                <property name="icon-name">video-x-generic-symbolic</property>
+                                <property name="pixel-size">48</property>
+                                <style>
+                                  <class name="dim-icon"/>
+                                </style>
+                              </object>
+                            </child>
+
+                            <child>
+                              <object class="GtkImage">
+                                <property name="icon-name">folder-symbolic</property>
+                                <property name="pixel-size">48</property>
+                                <style>
+                                  <class name="dim-icon"/>
+                                </style>
+                              </object>
+                            </child>
+
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="label">Drop video files or folders here to get started</property>
+                            <style>
+                              <class name="dim-label"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
+
               </object>
             </child>
 

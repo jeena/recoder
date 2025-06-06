@@ -63,7 +63,7 @@ class UIStateManager:
         if w.drop_hint.get_parent() != w.overlay:
             w.overlay.add_overlay(w.drop_hint)
         w.btn_transcode.set_visible(False)
-        w.btn_cancel.set_visible(False)
+        w.btn_clear.set_visible(False)
 
     def _handle_files_loaded(self):
         w = self.window
@@ -74,7 +74,7 @@ class UIStateManager:
         w.btn_transcode.set_sensitive(True)
         w.btn_transcode.set_label("Transcode")
         w.btn_transcode.add_css_class("suggested-action")
-        w.btn_cancel.set_visible(True)
+        w.btn_clear.set_visible(True)
         w.is_paused = False
 
     def _handle_transcoding(self):
@@ -85,7 +85,7 @@ class UIStateManager:
         w.btn_transcode.set_sensitive(True)
         w.btn_transcode.set_label("Pause")
         w.btn_transcode.remove_css_class("suggested-action")
-        w.btn_cancel.set_visible(True)
+        w.btn_clear.set_visible(True)
         w.is_paused = False
 
     def _handle_paused(self):
@@ -95,7 +95,7 @@ class UIStateManager:
         w.btn_transcode.set_visible(True)
         w.btn_transcode.set_sensitive(True)
         w.btn_transcode.set_label("Resume")
-        w.btn_cancel.set_visible(True)
+        w.btn_clear.set_visible(True)
         w.is_paused = True
 
     def _handle_done(self):
@@ -105,7 +105,7 @@ class UIStateManager:
         w.progress_bar.set_fraction(1.0)
         w.btn_transcode.set_visible(False)
         w.btn_transcode.remove_css_class("suggested-action")
-        w.btn_cancel.set_visible(True)
+        w.btn_clear.set_visible(True)
         w.is_paused = False
 
     def _handle_error(self):
@@ -114,5 +114,5 @@ class UIStateManager:
         w.drop_hint.set_visible(False)
         w.progress_bar.set_visible(False)
         w.btn_transcode.set_visible(False)
-        w.btn_cancel.set_visible(True)
+        w.btn_clear.set_visible(True)
         w.is_paused = False

@@ -26,10 +26,9 @@ class RecoderWindow(Adw.ApplicationWindow):
     listbox = Gtk.Template.Child()
     scrolled_window = Gtk.Template.Child()
     btn_transcode = Gtk.Template.Child()
-    btn_cancel = Gtk.Template.Child()
+    btn_clear = Gtk.Template.Child()
     progress_bar = Gtk.Template.Child()
     folder_label = Gtk.Template.Child()
-    btn_preferences = Gtk.Template.Child()
 
     def __init__(self, application):
         super().__init__(application=application)
@@ -42,6 +41,10 @@ class RecoderWindow(Adw.ApplicationWindow):
         self.state_settings.bind("is-maximized", self, "maximized", Gio.SettingsBindFlags.DEFAULT)
         self.state_settings.bind("is-fullscreen", self, "fullscreened", Gio.SettingsBindFlags.DEFAULT)
 
+        close_action = Gio.SimpleAction.new("close", None)
+        close_action.connect("activate", lambda *a: self.close())
+        self.add_action(close_action)
+
         self.file_items_to_process = []
         self.current_folder_name = None
         self.transcoder = None
@@ -53,8 +56,7 @@ class RecoderWindow(Adw.ApplicationWindow):
         self.ui_manager = UIStateManager(self, self.app_state_manager)
 
         self.btn_transcode.connect("clicked", self.on_transcode_clicked)
-        self.btn_cancel.connect("clicked", self.on_cancel_clicked)
-        self.btn_preferences.connect("clicked", self.on_preferences_clicked)
+        self.btn_clear.connect("clicked", self.on_clear_clicked)
 
         self.app_state_manager.state = AppState.IDLE
 
@@ -67,22 +69,6 @@ class RecoderWindow(Adw.ApplicationWindow):
         )
 
         Notify.init("Recoder")
-
-        self.preferences_window = None
-
-    def on_preferences_clicked(self, button):
-        if self.preferences_window is None:
-            self.preferences_window = RecoderPreferences()
-            self.preferences_window.set_transient_for(self)
-            self.preferences_window.set_modal(True)
-            self.preferences_window.connect("close-request", self.on_preferences_window_close)
-
-        self.preferences_window.present()
-
-    def on_preferences_window_close(self, window):
-        window.hide()
-        # Don't destroy, just hide
-        return True  # stops further handlers, prevents default destruction
 
 
     def process_drop_value(self, value):
@@ -150,7 +136,7 @@ class RecoderWindow(Adw.ApplicationWindow):
             self.is_paused = False
             self.app_state_manager.state = AppState.TRANSCODING
 
-    def on_cancel_clicked(self, button):
+    def on_clear_clicked(self, button):
         if self.transcoder and self.transcoder.is_processing:
             self.transcoder.stop()
         self.transcoder = None
