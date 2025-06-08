@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/resources/net.jeena.Recoder.svg" width="120" height="120" alt="Recoder logo">
+</p>
+
 # Recoder
 
 **Recoder** is a clean and minimal video transcoder for Linux, designed for GNOME using GTK4 and libadwaita. It supports batch processing, drag-and-drop, and a straightforward user experience.
