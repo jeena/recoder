@@ -55,6 +55,11 @@ def main():
             self.add_action(preferences_action)
             self.set_accels_for_action("app.preferences", ["<Primary>comma"])
 
+            help_action = Gio.SimpleAction.new("help", None)
+            help_action.connect("activate", self.on_help_activated)
+            self.add_action(help_action)
+            self.set_accels_for_action("app.help", ["F1"])
+
             about_action = Gio.SimpleAction.new("about", None)
             about_action.connect("activate", self.on_about_activate)
             self.add_action(about_action)
@@ -89,12 +94,25 @@ def main():
 
         def on_preferences_close(self, window):
             window.set_visible(False)
+            if window.prefs_changed:
+                window.prefs_changed = False
+                self.window.toast_overlay.add_toast(Adw.Toast.new("Preferences saved"))
             # Don't destroy, just hide
             return True  # stops further handlers, prevents default destruction
 
         def on_window_close(self, window):
             self.quit()
             return False  # allow default handler to proceed
+
+        def on_help_activated(self, action, param):
+            uri = "https://github.com/jeena/recoder/blob/master/docs/HELP.md"
+            try:
+                Gio.AppInfo.launch_default_for_uri(uri, None)
+                self.window.toast_overlay.add_toast(Adw.Toast.new("Opening help in browser…"))
+            except GLib.Error as e:
+                self.window.toast_overlay.add_toast(Adw.Toast.new(f"Failed to open help: {e.message}"))
+
+
 
     app = RecoderApp()
     return app.run(sys.argv)

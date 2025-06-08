@@ -4,6 +4,5 @@
     <file>preferences.ui</file>
     <file>file_entry_row.ui</file>
     <file>style.css</file>
-    <file alias="net.jeena.Recoder.svg">../resources/net.jeena.Recoder.svg</file>
   </gresource>
 </gresources>

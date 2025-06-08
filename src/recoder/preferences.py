@@ -13,6 +13,7 @@ class RecoderPreferences(Adw.PreferencesWindow):
     def __init__(self):
         super().__init__()
 
+        self.prefs_changed = False
         self.settings = Gio.Settings.new("net.jeena.recoder.preferences")
 
         current_value = self.settings.get_string("output-folder-template")
@@ -44,12 +45,10 @@ class RecoderPreferences(Adw.PreferencesWindow):
 
         if self.validate_template(text):
             self.settings.set_string("output-folder-template", text)
+            self.prefs_changed = True
             entry.remove_css_class("error")
         else:
             entry.add_css_class("error")
-
-
-
 
     def on_setting_changed(self, settings, key):
         if key == "output-folder-template":

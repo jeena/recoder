@@ -9,6 +9,10 @@
       <attribute name="action">app.preferences</attribute>
     </item>
     <item>
+      <attribute name="label">Help</attribute>
+      <attribute name="action">app.help</attribute>
+    </item>
+    <item>
       <attribute name="label">About Recoder</attribute>
       <attribute name="action">app.about</attribute>
     </item>
@@ -24,143 +28,145 @@
     <property name="default-height">400</property>
 
     <child>
-      <object class="AdwToolbarView" id="toolbar_view">
-        <child type="top">
-          <object class="AdwHeaderBar" id="header_bar">
-            <child>
-              <object class="GtkButton" id="btn_transcode">
-                <property name="label">Transcode</property>
-                <property name="sensitive">False</property>
+      <object class="AdwToastOverlay" id="toast_overlay">
+        <child>
+          <object class="AdwToolbarView" id="toolbar_view">
+            <child type="top">
+              <object class="AdwHeaderBar" id="header_bar">
+                <child>
+                  <object class="GtkButton" id="btn_transcode">
+                    <property name="label">Transcode</property>
+                    <property name="sensitive">False</property>
+                  </object>
+                </child>
+                <child type="title">
+                  <object class="GtkLabel" id="folder_label">
+                    <property name="ellipsize">end</property>
+                    <property name="hexpand">True</property>
+                    <property name="halign">center</property>
+                  </object>
+                </child>
+                <child type="end">
+                  <object class="GtkMenuButton" id="menu_button">
+                    <property name="icon-name">open-menu-symbolic</property>
+                    <property name="menu-model">main_menu</property>
+                    <property name="tooltip-text">Menu</property>
+                  </object>
+                </child>            
+                <child type="end">
+                  <object class="GtkButton" id="btn_clear">
+                    <property name="icon-name">edit-clear-symbolic</property>
+                    <property name="tooltip-text">Clear</property>
+                    <property name="visible">False</property>
+                    <property name="can-focus">False</property>
+                    <style>
+                      <class name="flat"/>
+                    </style>
+                  </object>
+                </child>
               </object>
             </child>
-            <child type="title">
-              <object class="GtkLabel" id="folder_label">
-                <property name="ellipsize">end</property>
-                <property name="hexpand">True</property>
-                <property name="halign">center</property>
-              </object>
-            </child>
-            <child type="end">
-              <object class="GtkMenuButton" id="menu_button">
-                <property name="icon-name">open-menu-symbolic</property>
-                <property name="menu-model">main_menu</property>
-                <property name="tooltip-text">Menu</property>
-              </object>
-            </child>            
-            <child type="end">
-              <object class="GtkButton" id="btn_clear">
-                <property name="icon-name">edit-clear-symbolic</property>
-                <property name="tooltip-text">Clear</property>
-                <property name="visible">False</property>
-                <property name="can-focus">False</property>
-                <style>
-                  <class name="flat"/>
-                </style>
-              </object>
-            </child>
-          </object>
-        </child>
 
-        <property name="content">
-          <object class="GtkBox" id="main_box">
-            <property name="orientation">vertical</property>
-            <property name="spacing">6</property>
-            <property name="vexpand">true</property>
-
-            <child>
-              <object class="GtkOverlay" id="overlay">
-                <property name="hexpand">true</property>
+            <property name="content">
+              <object class="GtkBox" id="main_box">
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
                 <property name="vexpand">true</property>
 
                 <child>
-                  <object class="GtkScrolledWindow" id="scrolled_window">
+                  <object class="GtkOverlay" id="overlay">
                     <property name="hexpand">true</property>
                     <property name="vexpand">true</property>
 
                     <child>
-                      <object class="GtkListBox" id="listbox">
-                        <property name="selection-mode">none</property>
+                      <object class="GtkScrolledWindow" id="scrolled_window">
+                        <property name="hexpand">true</property>
                         <property name="vexpand">true</property>
-                        <property name="show-separators">True</property>
-                        <style>
-                          <class name="rich-list"/>
-                        </style>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-
-                <child type="overlay">
-                  <object class="GtkBox" id="drop_hint">
-                    <property name="orientation">vertical</property>
-                    <property name="halign">fill</property>
-                    <property name="valign">fill</property>
-                    <property name="spacing">48</property>
-                    <property name="hexpand">true</property>
-                    <property name="vexpand">true</property>
-
-                    <!-- Inner box to center content -->
-                    <child>
-                      <object class="GtkBox">
-                        <property name="orientation">vertical</property>
-                        <property name="vexpand">true</property>
-                        <property name="halign">center</property>
-                        <property name="valign">center</property>
-                        <property name="spacing">48</property>
 
                         <child>
-                          <object class="GtkBox">
-                            <property name="orientation">horizontal</property>
-                            <property name="halign">center</property>
-                            <property name="spacing">48</property>
-
-                            <child>
-                              <object class="GtkImage">
-                                <property name="icon-name">video-x-generic-symbolic</property>
-                                <property name="pixel-size">48</property>
-                                <style>
-                                  <class name="dim-icon"/>
-                                </style>
-                              </object>
-                            </child>
-
-                            <child>
-                              <object class="GtkImage">
-                                <property name="icon-name">folder-symbolic</property>
-                                <property name="pixel-size">48</property>
-                                <style>
-                                  <class name="dim-icon"/>
-                                </style>
-                              </object>
-                            </child>
-
-                          </object>
-                        </child>
-
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="label">Drop video files or folders here to get started</property>
+                          <object class="GtkListBox" id="listbox">
+                            <property name="selection-mode">none</property>
+                            <property name="vexpand">true</property>
+                            <property name="show-separators">True</property>
                             <style>
-                              <class name="dim-label"/>
+                              <class name="rich-list"/>
                             </style>
                           </object>
                         </child>
                       </object>
                     </child>
+
+                    <child type="overlay">
+                      <object class="GtkBox" id="drop_hint">
+                        <property name="orientation">vertical</property>
+                        <property name="halign">fill</property>
+                        <property name="valign">fill</property>
+                        <property name="spacing">48</property>
+                        <property name="hexpand">true</property>
+                        <property name="vexpand">true</property>
+
+                        <!-- Inner box to center content -->
+                        <child>
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <property name="vexpand">true</property>
+                            <property name="halign">center</property>
+                            <property name="valign">center</property>
+                            <property name="spacing">48</property>
+
+                            <child>
+                              <object class="GtkBox">
+                                <property name="orientation">horizontal</property>
+                                <property name="halign">center</property>
+                                <property name="spacing">48</property>
+
+                                <child>
+                                  <object class="GtkImage">
+                                    <property name="icon-name">video-x-generic-symbolic</property>
+                                    <property name="pixel-size">48</property>
+                                    <style>
+                                      <class name="dim-icon"/>
+                                    </style>
+                                  </object>
+                                </child>
+
+                                <child>
+                                  <object class="GtkImage">
+                                    <property name="icon-name">folder-symbolic</property>
+                                    <property name="pixel-size">48</property>
+                                    <style>
+                                      <class name="dim-icon"/>
+                                    </style>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label">Drop video files or folders here to get started</property>
+                                <style>
+                                  <class name="dim-label"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
 
+                <child>
+                  <object class="GtkProgressBar" id="progress_bar">
+                    <property name="hexpand">true</property>
+                    <property name="visible">False</property>
+                  </object>
+                </child>
               </object>
-            </child>
-
-            <child>
-              <object class="GtkProgressBar" id="progress_bar">
-                <property name="hexpand">true</property>
-                <property name="visible">False</property>
-              </object>
-            </child>
+            </property>
           </object>
-        </property>
+        </child>
       </object>
     </child>
   </template>

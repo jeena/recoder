@@ -22,6 +22,7 @@ from recoder.app import APP_NAME
 class RecoderWindow(Adw.ApplicationWindow):
     __gtype_name__ = "RecoderWindow"
 
+    toast_overlay = Gtk.Template.Child()
     overlay = Gtk.Template.Child()
     drop_hint = Gtk.Template.Child()
     listbox = Gtk.Template.Child()
@@ -96,6 +97,10 @@ class RecoderWindow(Adw.ApplicationWindow):
 
         self.file_items_to_process = file_items
         self.app_state_manager.state = AppState.FILES_LOADED
+
+        count = len(self.file_items_to_process)
+        toast = Adw.Toast.new(f"{count} video file{'s' if count != 1 else ''} added")
+        self.toast_overlay.add_toast(toast)
         return False
 
     def clear_listbox(self):
@@ -122,26 +127,30 @@ class RecoderWindow(Adw.ApplicationWindow):
         self.transcoder.connect("notify::batch-progress", self.on_transcoder_progress)
         self.transcoder.connect("notify::batch-status", self.on_transcoder_status)
         self.transcoder.start()
-
         self.app_state_manager.state = AppState.TRANSCODING
+        self.toast_overlay.add_toast(Adw.Toast.new("Starting transcoding"))
 
     def pause_transcoding(self):
         if self.transcoder:
             self.transcoder.pause()
             self.is_paused = True
             self.app_state_manager.state = AppState.PAUSED
+            self.toast_overlay.add_toast(Adw.Toast.new("Transcoding paused"))
 
     def resume_transcoding(self):
         if self.transcoder:
             self.transcoder.resume()
             self.is_paused = False
             self.app_state_manager.state = AppState.TRANSCODING
+            self.toast_overlay.add_toast(Adw.Toast.new("Resuming transcoding"))
 
     def on_clear_clicked(self, button):
         if self.transcoder and self.transcoder.is_processing:
             self.transcoder.stop()
         self.transcoder = None
+        self.clear_listbox()
         self.app_state_manager.state = AppState.STOPPED
+        self.toast_overlay.add_toast(Adw.Toast.new("File list cleared"))
 
     def on_transcoder_progress(self, transcoder, param):
         self.progress_bar.set_fraction(transcoder.batch_progress / 100.0)
@@ -150,6 +159,7 @@ class RecoderWindow(Adw.ApplicationWindow):
         if transcoder.batch_status == BatchStatus.DONE:
             play_complete_sound()
             notify_done(APP_NAME, "Transcoding finished!")
+            self.toast_overlay.add_toast(Adw.Toast.new("Transcoding finished!"))
             self.app_state_manager.state = AppState.DONE
 
         elif transcoder.batch_status == BatchStatus.STOPPED:
@@ -157,4 +167,5 @@ class RecoderWindow(Adw.ApplicationWindow):
 
         elif transcoder.batch_status == BatchStatus.ERROR:
             notify_done(APP_NAME, "An error occurred during transcoding.")
+            self.toast_overlay.add_toast(Adw.Toast.new("An error occurred during transcoding"))
             self.app_state_manager.state = AppState.ERROR
