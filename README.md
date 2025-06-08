@@ -1,97 +1,35 @@
 # Recoder
 
-**Recoder** is a GTK4-based GUI application for video transcoding. It provides a clean, modern interface using Libadwaita and integrates with `ffmpeg` to convert videos with ease.
+**Recoder** is a clean and minimal video transcoder for Linux, designed for GNOME using GTK4 and libadwaita. It supports batch processing, drag-and-drop, and a straightforward user experience.
 
-![screenshot](resources/net.jeena.Recoder.png)
+![Screenshot of Recoder](docs/screenshot-3.png)
 
----
+## 📖 Help
+
+See [docs/HELP.md](docs/HELP.md) for usage instructions and tips.
 
 ## ✨ Features
 
-- Simple and elegant GTK4 interface
-- Built with Libadwaita for a native GNOME look
-- Supports common video formats using `ffmpeg`
-- Lightweight and fast
-- System notifications on task completion
+- Transcode multiple video files at once
+- Drag-and-drop support for folders and files
+- Modern libadwaita-based interface
+- Toast notifications
 
----
+## 📦 Installation
 
-## 🛠 Requirements
+### Arch Linux
 
-- Python 3.10+
-- GTK4
-- Libadwaita
-- `ffmpeg`
-- Python bindings:
-  - `python-gobject`
-
----
-
-## 🚀 Installation (Arch Linux)
+Recoder is available on the AUR:
 
 ```bash
-git clone https://github.com/jeena/recoder.git
-cd recoder
-makepkg -si
+yay -S recoder
 ```
 
-This will install Recoder system-wide using Pacman, so you can later remove it cleanly:
+### Other Platforms
 
-```bash
-sudo pacman -R recoder
-```
-
----
-
-## 🧪 Development Setup
-
-If you're hacking on Recoder:
-
-```bash
-git clone https://github.com/jeena/recoder.git
-cd recoder
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-Then run:
-
-```bash
-recoder
-```
-
----
-
-## 📁 Project Structure
-
-```
-src/
-└── recoder/
-    ├── app.py
-    ├── config.py
-    ├── models.py
-    ├── transcoder_worker.py
-    └── ui.py
-resources/
-├── net.jeena.Recoder.desktop
-└── net.jeena.Recoder.png
-```
-
----
-
-## 📦 Packaging
-
-Recoder follows modern Python packaging using `pyproject.toml` and `setuptools`. The Arch package installs Python modules to `site-packages` and the desktop file + icon in appropriate locations.
-
----
+Recoder will be available as a Flatpak in the future.
 
 ## 📄 License
 
-Licensed under the GPLv3. See `LICENSE` for details.
-
----
-
-## 👤 Author
-
-Made by Jeena · [github.com/jeena](https://github.com/jeena)
+Recoder is licensed under the GNU General Public License v3.0.  
+See [LICENSE](LICENSE) for details.
