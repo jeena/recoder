@@ -1,0 +1,42 @@
+app-id: net.jeena.Recoder
+runtime: org.gnome.Platform
+runtime-version: "48"
+sdk: org.gnome.Sdk
+command: recoder
+
+finish-args:
+  - --filesystem=home
+  - --filesystem=/mnt
+  - --filesystem=/media
+  - --filesystem=/run/media
+  - --filesystem=xdg-data/sounds:ro
+  - --filesystem=~/.local/share/sounds/recoder:ro
+  - --socket=wayland
+  - --socket=x11
+  - --socket=pulseaudio
+  - --talk-name=org.freedesktop.Notifications
+  - --env=GSETTINGS_SCHEMA_DIR=/app/share/glib-2.0/schemas
+  - --device=dri
+
+add-extensions:
+  org.freedesktop.Platform.ffmpeg-full:
+    version: "24.08"
+    directory: lib/ffmpeg
+    add-ld-path: .
+
+modules:
+  - name: recoder
+    buildsystem: simple
+    builddir: true
+    sources:
+      - type: dir
+        path: ../../
+    build-commands:
+      - glib-compile-resources src/resources/resources.xml --target=src/recoder/resources.gresource --sourcedir=src/resources
+      - pip3 install --prefix=/app --no-deps --no-build-isolation .
+      - install -Dm644 src/resources/net.jeena.Recoder.desktop /app/share/applications/net.jeena.Recoder.desktop
+      - install -Dm644 src/resources/net.jeena.Recoder.svg /app/share/icons/hicolor/scalable/apps/net.jeena.Recoder.svg
+      - install -Dm644 src/resources/net.jeena.recoder.gschema.xml /app/share/glib-2.0/schemas/net.jeena.recoder.gschema.xml
+      - install -Dm644 src/resources/complete.oga /app/share/sounds/complete.oga
+      - install -Dm644 src/resources/net.jeena.Recoder.metainfo.xml /app/share/metainfo/net.jeena.Recoder.metainfo.xml
+      - glib-compile-schemas /app/share/glib-2.0/schemas

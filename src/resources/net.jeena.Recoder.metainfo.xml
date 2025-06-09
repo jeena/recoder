@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>net.jeena.Recoder</id>
+  <name>Recoder</name>
+  <summary>Batch video transcoder</summary>
+
+  <description>
+    <p>
+      Recoder is a simple and efficient GUI tool for batch video transcoding.
+      It supports drag-and-drop, presets, progress tracking, and more.
+    </p>
+  </description>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-1.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-2.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-3.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-4.png</image>
+    </screenshot>
+  </screenshots>
+
+  <launchable type="desktop-id">net.jeena.Recoder.desktop</launchable>
+  <developer_name>Jeena Paradies</developer_name>
+  <project_license>GPL-3.0-or-later</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+
+  <url type="homepage">https://github.com/jeena/recoder</url>
+  <url type="bugtracker">https://github.com/jeena/recoder/issues</url>
+  <url type="help">https://github.com/jeena/recoder/blob/main/docs/HELP.md</url>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence">none</content_attribute>
+    <content_attribute id="language">none</content_attribute>
+    <content_attribute id="sex">none</content_attribute>
+    <content_attribute id="drugs">none</content_attribute>
+    <content_attribute id="money">none</content_attribute>
+    <content_attribute id="gambling">none</content_attribute>
+    <content_attribute id="user_interaction">none</content_attribute>
+    <content_attribute id="data_sharing">none</content_attribute>
+  </content_rating>
+
+  <releases>
+    <release version="1.0.0" date="2025-06-09">
+      <description>
+        <p>Initial release of Recoder.</p>
+      </description>
+    </release>
+  </releases>
+</component>

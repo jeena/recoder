@@ -12,3 +12,7 @@ src/recoder.egg-info/
 
 *.gresource
 *.compiled
+
+packaging/flatpack/build-dir
+.flatpak-builder
+repo/
