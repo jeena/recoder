@@ -35,5 +35,20 @@ def notify_done(title, body):
 def play_complete_sound():
     if shutil.which("canberra-gtk-play"):
         subprocess.Popen(["canberra-gtk-play", "--id", "complete"])
-    else:
-        print("canberra-gtk-play not found.")
+        return
+
+    sound_paths = [
+        os.path.expanduser("~/.local/share/sounds/recoder/complete.oga"),
+        "/usr/share/sounds/freedesktop/stereo/complete.oga",
+        "/usr/share/sounds/recoder/complete.oga",
+        "/app/share/sounds/complete.oga",
+    ]
+
+    players = ["paplay", "play"]
+
+    for player in players:
+        if shutil.which(player):
+            for path in sound_paths:
+                if os.path.isfile(path) and os.access(path, os.R_OK):
+                    subprocess.Popen([player, path])
+                    return
