@@ -1,6 +1,0 @@
-[Flatpak Ref]
-Title=Recoder
-Name=net.jeena.Recoder
-Branch=stable
-Url=https://jeena/recoder.github.io/flatpak-repo
-IsRuntime=false

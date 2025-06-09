@@ -1,8 +1,0 @@
-<gresources>
-  <gresource prefix="/net/jeena/recoder">
-    <file>window.ui</file>
-    <file>preferences.ui</file>
-    <file>file_entry_row.ui</file>
-    <file>style.css</file>
-  </gresource>
-</gresources>
