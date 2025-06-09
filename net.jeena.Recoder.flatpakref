@@ -4,3 +4,4 @@ Name=net.jeena.Recoder
 Branch=stable
 Url=https://jeena.github.io/recoder/flatpak-repo
 IsRuntime=false
+RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
