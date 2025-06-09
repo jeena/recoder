@@ -29,9 +29,20 @@ Recoder is available on the AUR:
 yay -S recoder
 ```
 
-### Other Platforms
+### Flatpak
 
-Recoder will be available as a Flatpak in the future.
+[Install Recoder Flatpak](https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref)
+
+After downloading the `net.jeena.Recoder.flatpakref` file, **double-click the file** or **open it with GNOME Software** to start the installation.
+
+#### Install via Command Line
+
+If you prefer, run these commands in a terminal:
+
+```bash
+flatpak install --user https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref
+flatpak run net.jeena.Recoder
+```
 
 ## 📄 License
 
