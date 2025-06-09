@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recoder — Batch Video Transcoding</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+    body {
+      margin: 0; padding: 0;
+      background: #2e2e2e;
+      color: #ddd;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+    }
+    a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto 4rem;
+      padding: 0 1rem;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .logo-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      flex: 1 1 auto;
+      min-width: 240px;
+    }
+    header img {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 0.5rem;
+      user-select: none;
+    }
+    header h1 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      color: #58a6ff;
+      margin: 0.2rem 0 0.5rem;
+      user-select: none;
+    }
+    header p {
+      font-size: 1.1rem;
+      color: #aaa;
+      margin: 0;
+      user-select: none;
+    }
+
+    /* Install section with button + CLI */
+    .install-section {
+      flex-shrink: 0;
+      min-width: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      position: relative;
+      height: 130px; /* reserve space */
+      user-select: none;
+    }
+
+    .install-btn {
+      background-color: #3390ff;
+      color: white;
+      font-weight: 700;
+      font-size: 1.15rem;
+      padding: 0.7rem 2rem;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgb(51 144 255 / 0.6);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-decoration: none !important;
+      user-select: none;
+      text-align: center;
+    }
+    .install-btn:hover {
+      background-color: #1c6ddb;
+    }
+
+    .install-instructions {
+      background: #222; /* Dark but not pure black */
+      color: #58a6ff;
+      font-size: 1rem;
+      padding: 1rem 1.2rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+      overflow-x: auto;
+
+      display: none; /* Initially hidden */
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .install-instructions.show {
+      display: block;
+    }
+
+    .install-method {
+      margin-bottom: 1em;
+    }
+
+    .install-label {
+      font-weight: bold;
+      margin-bottom: 0.25em;
+    }
+
+    .install-command {
+      display: block;
+      background: #f4f4f4;
+      padding: 0.5em;
+      border-radius: 5px;
+      font-family: monospace;
+      margin-bottom: 0.25em;
+      color: black;
+      font-size: 0.9em;
+    }
+
+    .toggle-link {
+      cursor: pointer;
+      color: #58a6ff;
+      font-weight: 600;
+      user-select: none;
+      margin-top: 1rem;
+      display: inline-block;
+    }
+
+    /* Carousel styles */
+    .carousel {
+      width: 708px;
+      height: 472px;
+      margin: 3rem auto 2rem;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgb(0 0 0 / 0.4);
+      background: #222;
+      position: relative;
+      user-select: none;
+    }
+    .carousel-track {
+      display: flex;
+      transition: transform 0.5s ease;
+      height: 100%;
+      will-change: transform;
+    }
+    .carousel-track img {
+      width: 708px;
+      height: 472px;
+      object-fit: contain;
+      flex-shrink: 0;
+      margin: 0;
+      user-select: none;
+      -webkit-user-drag: none;
+      display: block;
+    }
+    .carousel-controls {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .carousel-controls button {
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: #58a6ff;
+      font-size: 2rem;
+      cursor: pointer;
+      pointer-events: all;
+      user-select: none;
+      transition: background-color 0.3s ease;
+      border-radius: 4px;
+      margin: 0 0.5rem;
+    }
+    .carousel-controls button:hover {
+      background: #58a6ff;
+      color: #222;
+    }
+
+    /* Features grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+      gap: 1.8rem;
+      margin-top: 3rem;
+    }
+    .feature-item {
+      background: #3a3a3a;
+      color: #ddd;
+      border-radius: 10px;
+      padding: 1.6rem 1.8rem;
+      box-shadow: 0 3px 8px rgb(0 0 0 / 0.3);
+      transition: background 0.3s ease;
+    }
+    .feature-item:hover {
+      background: #444444;
+    }
+    .feature-item h3 {
+      color: #58a6ff;
+      margin-top: 0;
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+    }
+
+    .help-section {
+      margin-top: 3rem;
+      padding: 1.5rem;
+      background-color: #1a1a1a;
+      border-radius: 8px;
+      color: #ccc;
+    }
+    .help-section h2 {
+      margin-bottom: 0.5rem;
+      font-size: 1.3rem;
+    }
+    .help-section a {
+      color: #58a6ff;
+      text-decoration: underline;
+    }
+
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      header h1 {
+        font-size: 2rem;
+      }
+      .install-section {
+        width: 100%;
+        min-width: auto;
+        height: auto;
+      }
+      .install-btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+      }
+      .carousel {
+        width: 100%;
+        height: auto;
+      }
+      .carousel-track img {
+        width: 100%;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-section" aria-label="Recoder logo and tagline">
+        <img src="https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/src/resources/net.jeena.Recoder.svg" alt="Recoder Logo" />
+        <h1>Recoder</h1>
+        <p>Minimal, batch video transcoding made simple</p>
+      </div>
+
+      <div class="install-section">
+        <a href="https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref" class="install-btn" aria-label="Install Recoder via Flatpak">Install</a>
+        
+        <span class="toggle-link" id="toggle-install-cli" tabindex="0" role="button" aria-expanded="false" aria-controls="cli-commands">
+          Manual installation ▼
+        </span>
+      </div>
+
+      <div id="cli-commands" class="install-instructions" aria-hidden="true" tabindex="0">
+        <div class="install-method">
+          <div class="install-label">Arch Linux (AUR):</div>
+          <code class="install-command">yay -S recoder</code>
+        </div>
+
+        <div class="install-method">
+          <div class="install-label">Flatpak install via terminal:</div>
+          <code class="install-command">flatpak install --user https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref</code>
+          <code class="install-command">flatpak run net.jeena.Recoder</code>
+        </div>
+      </div>
+
+    </header>
+
+    <div class="carousel" aria-label="Recoder screenshots carousel">
+      <div class="carousel-track">
+        <img src="https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-1.png" alt="Recoder initial prompt view" />
+        <img src="https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-2.png" alt="Recoder folder loaded with files" />
+        <img src="https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-3.png" alt="Recoding in progress" />
+        <img src="https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/docs/screenshot-4.png" alt="Preferences view with output folder options" />
+      </div>
+      <div class="carousel-controls">
+        <button id="prev" aria-label="Previous screenshot">&#8592;</button>
+        <button id="next" aria-label="Next screenshot">&#8594;</button>
+      </div>
+    </div>
+
+    <section class="features" aria-label="Features of Recoder">
+      <div class="feature-item">
+        <h3>🎞️ Batch Transcoding Made Easy</h3>
+        <p>Drop one video file or a folder of videos to transcode them all at once. Subfolders are not processed recursively.</p>
+      </div>
+      <div class="feature-item">
+        <h3>🖱️ Drag &amp; Drop Friendly</h3>
+        <p>Simply drag files or folders onto the app. Non-video files are ignored automatically.</p>
+      </div>
+      <div class="feature-item">
+        <h3>🧭 Clear &amp; Intuitive UI</h3>
+        <p>Modern libadwaita interface with simple controls: Transcode, Pause, Resume, and Clear buttons.</p>
+      </div>
+      <div class="feature-item">
+        <h3>📁 Flexible Output Folder</h3>
+        <p>Customize where transcoded files go — use relative or absolute paths and variables like <code>{{source_folder_name}}</code>.</p>
+      </div>
+      <div class="feature-item">
+        <h3>📊 Live Progress &amp; Notifications</h3>
+        <p>See progress clearly with buttons changing states, plus toast notifications keep you updated.</p>
+      </div>
+      <div class="feature-item">
+        <h3>🛡️ Safe File Management</h3>
+        <p>Files are transcoded to temporary names first and renamed only on successful completion.</p>
+      </div>
+      <div class="feature-item">
+        <h3>🧩 System Integration</h3>
+        <p>Supports Flatpak for easy installation, runs smoothly on Linux desktops.</p>
+      </div>
+    </section>
+
+    <section class="help-section" aria-label="Help and Documentation">
+      <h2>Need Help?</h2>
+      <p>
+        📖 Learn how to use Recoder in the
+        <a href="https://github.com/jeena/recoder/blob/main/docs/HELP.md" target="_blank" rel="noopener">HELP.md</a>.
+      </p>
+      <p>
+        🛠 Found a bug or have a suggestion? Report it via the
+        <a href="https://github.com/jeena/recoder/issues" target="_blank" rel="noopener">issue tracker</a>.
+      </p>
+      <p>
+        💻 Explore the source code on
+        <a href="https://github.com/jeena/recoder" target="_blank" rel="noopener">GitHub</a>.
+      </p>
+    </section>
+
+    <footer class="site-footer" aria-label="Site footer">
+      <p>© 2025 Jeena — Developed by Jeena</p>
+    </footer>
+
+  </div>
+
+  <script>
+    const track = document.querySelector('.carousel-track');
+    const images = Array.from(track.children);
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const toggleBtn = document.getElementById('toggle-install-cli');
+    const commands = document.getElementById('cli-commands');
+
+    let currentIndex = 0;
+    const total = images.length;
+
+    function updateCarousel() {
+      const carouselWidth = document.querySelector('.carousel').offsetWidth;
+      track.style.transform = `translateX(${-currentIndex * carouselWidth}px)`;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + total) % total;
+      updateCarousel();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % total;
+      updateCarousel();
+    });
+
+    toggleBtn.addEventListener('click', () => {
+      const isShown = commands.classList.toggle('show');
+      toggleBtn.setAttribute('aria-expanded', isShown);
+      toggleBtn.textContent = isShown
+        ? 'Manual installation ▲'
+        : 'Manual installation ▼';
+      commands.setAttribute('aria-hidden', !isShown);
+    });
+
+    toggleBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleBtn.click();
+      }
+    });
+
+    window.addEventListener('resize', updateCarousel);
+
+    // Initialize carousel position
+    updateCarousel();
+  </script>
+
+</body>
+</html>
