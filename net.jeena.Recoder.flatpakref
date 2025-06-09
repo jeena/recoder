@@ -2,5 +2,5 @@
 Title=Recoder
 Name=net.jeena.Recoder
 Branch=stable
-Url=https://jeena/recoder.github.io/flatpak-repo
+Url=https://jeena.github.io/recoder/flatpak-repo
 IsRuntime=false
