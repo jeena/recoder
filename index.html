@@ -195,6 +195,36 @@
       color: #222;
     }
 
+    .why-recoder {
+      background-color: #1c1c1c;
+      padding: 2rem;
+      border-top: 2px solid #333;
+      color: #ccc;
+      font-style: normal;
+      border-radius: 10px;
+    }
+
+    .why-recoder-inner {
+      column-count: 2;
+      column-gap: 3rem;
+      column-rule: 1px solid #333; /* adds a vertical line between columns */
+      max-width: 900px;
+      margin: 0 auto;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .why-recoder-inner h2 {
+      column-span: all; /* headline spans both columns */
+      margin: 0;
+    }
+    .why-recoder h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: #58a6ff;
+    }
+
+
     /* Features grid */
     .features {
       display: grid;
@@ -221,19 +251,23 @@
     }
 
     .help-section {
-      margin-top: 3rem;
+      margin: 3rem 0;
       padding: 1.5rem;
       background-color: #1a1a1a;
       border-radius: 8px;
       color: #ccc;
     }
     .help-section h2 {
-      margin-bottom: 0.5rem;
+      margin: 0.5rem 0;
       font-size: 1.3rem;
     }
     .help-section a {
       color: #58a6ff;
       text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
     }
 
 
@@ -272,12 +306,11 @@
       <div class="logo-section" aria-label="Recoder logo and tagline">
         <img src="https://raw.githubusercontent.com/jeena/recoder/refs/heads/main/src/resources/net.jeena.Recoder.svg" alt="Recoder Logo" />
         <h1>Recoder</h1>
-        <p>Minimal, batch video transcoding made simple</p>
+        <p>Batch transcode family videos to DNxHD for smooth Davinci Resolve editing</p>
       </div>
 
       <div class="install-section">
         <a href="https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref" class="install-btn" aria-label="Install Recoder via Flatpak">Install</a>
-        
         <span class="toggle-link" id="toggle-install-cli" tabindex="0" role="button" aria-expanded="false" aria-controls="cli-commands">
           Manual installation ▼
         </span>
@@ -288,14 +321,12 @@
           <div class="install-label">Arch Linux (AUR):</div>
           <code class="install-command">yay -S recoder</code>
         </div>
-
         <div class="install-method">
           <div class="install-label">Flatpak install via terminal:</div>
           <code class="install-command">flatpak install --user https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref</code>
           <code class="install-command">flatpak run net.jeena.Recoder</code>
         </div>
       </div>
-
     </header>
 
     <div class="carousel" aria-label="Recoder screenshots carousel">
@@ -311,14 +342,52 @@
       </div>
     </div>
 
+    <section class="why-recoder" aria-label="Why Recoder exists">
+      <div class="why-recoder-inner">
+        <h2>🎬 Why Recoder?</h2>
+
+        <p>
+          I used to edit family videos in Kdenlive without a problem — it handled footage from all our devices without complaining. But then I switched to <strong>DaVinci Resolve</strong>, and suddenly nothing worked right. My Sony Alpha 7C, my Galaxy S24, and my wife's iPhone all produced files that Resolve couldn’t handle without transcoding.
+        </p>
+
+        <h3>😤 Too Much Fuss, Too Many Steps</h3>
+        <p>
+          Every time I wanted to edit, I had to hunt down the right <code>ffmpeg</code> settings and manually run them on each video — a frustrating and repetitive task.
+        </p>
+
+        <p>
+          My typical workflow is simple: I create one folder per event on an external HDD and drop in videos from all our cameras. A script renames the files based on the date and time so I can easily sort them. But for Resolve, everything has to be <strong>transcoded to DNxHD</strong> — which only supports resolutions like 1920×1080 and 1280×720.
+        </p>
+
+        <h3>🔄 Vertical Videos? Extra Pain</h3>
+        <p>
+          That also meant vertical videos couldn’t work. So now, I rotate them during transcoding to preserve resolution and rotate them back in Resolve during editing.
+        </p>
+
+        <h3>✨ Enter Recoder</h3>
+        <p>
+          I built Recoder to automate this annoying step — so I could spend more time editing memories and less time fiddling with command-line tools.
+        </p>
+      </div>
+    </section>
+
     <section class="features" aria-label="Features of Recoder">
       <div class="feature-item">
+        <h3>⚙️ Powerful Transcoding with ffmpeg</h3>
+        <p>Powered by <a href="https://ffmpeg.org/">ffmpeg</a> to support virtually all input formats.</p>
+      </div>
+      <div class="feature-item">
+        <h3>🎥 Consistent Output Quality</h3>
+        <p>Output videos are always 1920×1080 DNxHD, perfect for smooth editing.</p>
+        <p>Vertical videos are rotated 90° during transcoding to preserve quality.</p>
+      </div>
+      <div class="feature-item">
         <h3>🎞️ Batch Transcoding Made Easy</h3>
-        <p>Drop one video file or a folder of videos to transcode them all at once. Subfolders are not processed recursively.</p>
+        <p>Drop one video or a folder of videos to transcode them all at once. Subfolders and non-video files are ignored automatically.</p>
       </div>
       <div class="feature-item">
         <h3>🖱️ Drag &amp; Drop Friendly</h3>
-        <p>Simply drag files or folders onto the app. Non-video files are ignored automatically.</p>
+        <p>Simply drag a file or a folder onto the app and get a preview of which files will be transcoded.</p>
       </div>
       <div class="feature-item">
         <h3>🧭 Clear &amp; Intuitive UI</h3>
@@ -329,18 +398,19 @@
         <p>Customize where transcoded files go — use relative or absolute paths and variables like <code>{{source_folder_name}}</code>.</p>
       </div>
       <div class="feature-item">
-        <h3>📊 Live Progress &amp; Notifications</h3>
-        <p>See progress clearly with buttons changing states, plus toast notifications keep you updated.</p>
+        <h3>🛡️ Safe File Management</h3>
+        <p>Files are processed without altering originals; new files are saved separately based on your settings.</p>
       </div>
       <div class="feature-item">
-        <h3>🛡️ Safe File Management</h3>
-        <p>Files are transcoded to temporary names first and renamed only on successful completion.</p>
+        <h3>📊 Live Progress &amp; Notifications</h3>
+        <p>See detailed progress bars for each file and the entire batch. Buttons update states dynamically, toast notifications keep you informed, and a completion sound plays when the batch finishes.</p>
       </div>
       <div class="feature-item">
         <h3>🧩 System Integration</h3>
         <p>Supports Flatpak for easy installation, runs smoothly on Linux desktops.</p>
       </div>
     </section>
+
 
     <section class="help-section" aria-label="Help and Documentation">
       <h2>Need Help?</h2>
@@ -359,9 +429,8 @@
     </section>
 
     <footer class="site-footer" aria-label="Site footer">
-      <p>© 2025 Jeena — Developed by Jeena</p>
+      <p>Developed by <a href="https://jeena.net">Jeena</a></p>
     </footer>
-
   </div>
 
   <script>
