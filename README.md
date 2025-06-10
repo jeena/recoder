@@ -4,6 +4,8 @@
 
 # Recoder
 
+*Batch transcode family videos to DNxHD for smooth Davinci Resolve editing*
+
 **Recoder** is a clean and minimal video transcoder for Linux, designed for GNOME using GTK4 and libadwaita. It supports batch processing, drag-and-drop, and a straightforward user experience.
 
 ![Screenshot of Recoder](docs/screenshot-3.png)
@@ -14,35 +16,11 @@ See [docs/HELP.md](docs/HELP.md) for usage instructions and tips.
 
 ## ✨ Features
 
-- Transcode multiple video files at once
-- Drag-and-drop support for folders and files
-- Modern libadwaita-based interface
-- Toast notifications
+See the [Recoder Website](https://jeena.github.io/recoder/) for a full list of features.
 
 ## 📦 Installation
 
-### Arch Linux
-
-Recoder is available on the AUR:
-
-```bash
-yay -S recoder
-```
-
-### Flatpak
-
-[Install Recoder Flatpak](https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref)
-
-After downloading the `net.jeena.Recoder.flatpakref` file, **double-click the file** or **open it with GNOME Software** to start the installation.
-
-#### Install via Command Line
-
-If you prefer, run these commands in a terminal:
-
-```bash
-flatpak install --user https://jeena.github.io/recoder/net.jeena.Recoder.flatpakref
-flatpak run net.jeena.Recoder
-```
+Recoder is available in the AUR and as a flatpak. Visit the [Recoder Website](https://jeena.github.io/recoder/) for install instructions.
 
 ## 📄 License
 
