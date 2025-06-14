@@ -1,6 +1,6 @@
 [project]
 name = "recoder"
-version = "1.0.0"
+version = "1.0.1"
 description = "A GTK4 video transcoding GUI application"
 readme = "README.md"
 authors = [{name = "Jeena", email = "hello@jeena.net"}]
