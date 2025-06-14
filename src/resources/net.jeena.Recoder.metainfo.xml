@@ -6,6 +6,7 @@
 
   <description>
     <p>
+      Batch transcode family videos to DNxHD for smooth Davinci Resolve editing.
       Recoder is a simple and efficient GUI tool for batch video transcoding.
       It supports drag-and-drop, presets, progress tracking, and more.
     </p>
