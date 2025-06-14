@@ -52,5 +52,10 @@
         <p>Initial release of Recoder.</p>
       </description>
     </release>
+    <release version="1.0.1" date="2025-06-14">
+      <description>
+        <p>Fix bad video quality.</p>
+      </description>
+    </release>
   </releases>
 </component>
