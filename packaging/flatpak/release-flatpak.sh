@@ -9,6 +9,25 @@ WORKTREE_DIR="../../gh-pages"
 PUBLISH_SUBDIR="flatpak-repo"
 GPG_KEY_ID="1DF6570C929E2C186685046F0D6A8E36B9EE6177"
 
+# Get version
+VERSION=$(python3 -c 'import toml; print(toml.load("../../pyproject.toml")["project"]["version"])')
+
+# Check metainfo.xml
+if grep -q "<release version=\"$VERSION\"" ../../src/resources/net.jeena.Recoder.metainfo.xml; then
+  echo "Version $VERSION found in metainfo."
+else
+  echo "Error: Version $VERSION not found in metainfo." >&2
+  exit 1
+fi
+
+# Check git tag
+if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+  echo "Git tag v$VERSION exists."
+else
+  echo "Error: Git tag v$VERSION not found." >&2
+  exit 1
+fi
+
 # Clean previous build
 rm -rf build-dir "${REPO_DIR}"
 
@@ -51,9 +70,6 @@ IsRuntime=false
 RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
 GPGKey=$(base64 -w0 < "${REPO_DIR}/gpg.key")
 EOF
-
-# Get version
-VERSION=$(python3 -c 'import toml; print(toml.load("../../pyproject.toml")["project"]["version"])')
 
 # Commit and push only the publish subdir and flatpakref
 pushd "${WORKTREE_DIR}" > /dev/null
