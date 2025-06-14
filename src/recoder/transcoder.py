@@ -197,7 +197,7 @@ class Transcoder(GObject.GObject):
         cmd = [
             "ffmpeg", "-y", "-i", in_path,
             "-vcodec", "dnxhd", "-acodec", "pcm_s16le",
-            "-b:v", "36M", "-pix_fmt", "yuv422p", "-r", "30000/1001",
+            "-b:v", "120M", "-pix_fmt", "yuv422p",
             "-f", "mov", "-map_metadata", "0"
         ]
         if vf:
