@@ -1,3 +1,5 @@
+⚠️ This repository has moved to https://git.jeena.net/jeena/recoder
+
 <p align="center">
   <img src="src/resources/net.jeena.Recoder.svg" width="120" height="120" alt="Recoder logo">
 </p>
