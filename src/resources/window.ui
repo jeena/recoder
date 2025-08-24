@@ -144,7 +144,7 @@
 
                             <child>
                               <object class="GtkLabel">
-                                <property name="label">Drop video files or folders here to get started</property>
+                                <property name="label">Drop video file or folder here, or press Ctrl+V to paste a path</property>
                                 <style>
                                   <class name="dim-label"/>
                                 </style>
