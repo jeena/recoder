@@ -58,5 +58,10 @@
         <p>Fix bad video quality.</p>
       </description>
     </release>
+    <release version="1.1.0" date="2025-08-24">
+      <description>
+        <p>Add possibility to Ctrl-v a path instead only drag and drop.</p>
+      </description>
+    </release>
   </releases>
 </component>
